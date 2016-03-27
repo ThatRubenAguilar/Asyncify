@@ -134,6 +134,17 @@ namespace TestHelper
         }
 
         /// <summary>
+        /// Create Documents from strings through creating a project that contains them.
+        /// </summary>
+        /// <param name="sources">Classes in the form of strings</param>
+        /// <param name="language">The language the source code is in</param>
+        /// <returns>A Document created from the source string</returns>
+        protected static Document[] CreateDocuments(string[] sources, string language = LanguageNames.CSharp)
+        {
+            return CreateProject(sources, language).Documents.ToArray();
+        }
+
+        /// <summary>
         /// Create a project using the inputted strings as sources.
         /// </summary>
         /// <param name="sources">Classes in the form of strings</param>

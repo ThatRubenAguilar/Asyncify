@@ -87,6 +87,7 @@ namespace Asyncify
             // Grab first expression before the .Result call
             var keepNode = (ExpressionSyntax) relativeParent.DescendantNodes().First();
 
+            // Cant call .Result off of a non generic Task.
             return Task.FromResult(AwaitTaskSyntax(root, document, keepNode, relativeParent, true));
         }
 
