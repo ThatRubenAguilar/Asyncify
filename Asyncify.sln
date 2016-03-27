@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Asyncify", "Asyncify\Asyncify\Asyncify.csproj", "{CF3AF501-23AD-4A0B-9224-AC8A9CA5F588}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Asyncify.Test", "Asyncify\Asyncify.Test\Asyncify.Test.csproj", "{0F8AA58E-E6EC-4740-BAEE-2FF45BFD2588}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Asyncify.Vsix", "Asyncify\Asyncify.Vsix\Asyncify.Vsix.csproj", "{53A9E196-CBA7-4CB2-A6AA-B6ACF373C225}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CF3AF501-23AD-4A0B-9224-AC8A9CA5F588}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF3AF501-23AD-4A0B-9224-AC8A9CA5F588}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF3AF501-23AD-4A0B-9224-AC8A9CA5F588}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF3AF501-23AD-4A0B-9224-AC8A9CA5F588}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F8AA58E-E6EC-4740-BAEE-2FF45BFD2588}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F8AA58E-E6EC-4740-BAEE-2FF45BFD2588}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F8AA58E-E6EC-4740-BAEE-2FF45BFD2588}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F8AA58E-E6EC-4740-BAEE-2FF45BFD2588}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53A9E196-CBA7-4CB2-A6AA-B6ACF373C225}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53A9E196-CBA7-4CB2-A6AA-B6ACF373C225}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53A9E196-CBA7-4CB2-A6AA-B6ACF373C225}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53A9E196-CBA7-4CB2-A6AA-B6ACF373C225}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
