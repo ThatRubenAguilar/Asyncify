@@ -73,7 +73,8 @@ namespace Asyncify
                 return;
             }
             
-            var parentTaskName = identifierNameSyntax.Parent.ToString();
+            var parentTaskName = identifierNameSyntax.Parent.ToStringWithoutTrivia();
+
             // Trim ".Result"
             var trimmedParentTaskName = parentTaskName.Substring(0,
                 parentTaskName.Length - (AsyncifyResources.ResultProperty.Length + 1));
@@ -97,7 +98,7 @@ namespace Asyncify
             }
 
 
-            var parentTaskAwaiterName = identifierNameSyntax.Parent.ToString();
+            var parentTaskAwaiterName = identifierNameSyntax.Parent.ToStringWithoutTrivia();
             // Trim ".GetResult"
             var trimmedParentTaskAwaiterName = parentTaskAwaiterName.Substring(0,
                 parentTaskAwaiterName.Length - (AsyncifyResources.GetResultMethod.Length + 1));

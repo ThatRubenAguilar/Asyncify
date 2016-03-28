@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Asyncify.Helpers;
 using Microsoft.CodeAnalysis;
@@ -246,6 +247,16 @@ namespace Asyncify.Extensions
             }
 
             return triviaList;
+        }
+
+        public static string ToStringWithoutTrivia(this SyntaxNode node)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var token in node.DescendantTokens())
+            {
+                sb.Append(token);
+            }
+            return sb.ToString();
         }
     }
 }

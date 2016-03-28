@@ -106,5 +106,42 @@ namespace Asyncify.Test
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
         }
 
+        
+        [TestMethod]
+        public void Should_keep_trivia_when_adding_parenthesis_in_await_task_fix_on_generic_task_result_property_when_using_task_method()
+        {
+            var testExpression = @"
+        var val = AsyncMethods.GetMemberMethods()/*bah*/.// who
+        #region even
+            Result // comments
+            .GetNumber();
+        #endregion";
+            var fixExpression = @"
+        var val = (await AsyncMethods.GetMemberMethods())/*bah*/// who
+        #region even
+            // comments
+            .GetNumber();
+        #endregion";
+            var expected = AwaitTaskResultPropertyExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
+
+            AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
+        }
+        [TestMethod]
+        public void Should_keep_trivia_when_not_adding_parenthesis_in_await_task_fix_on_generic_task_result_property_when_using_task_method()
+        {
+            var testExpression = @"
+        var val = AsyncMethods.GetMemberMethods()/*bah*/.// who
+        #region even
+            Result; // comments
+        #endregion";
+            var fixExpression = @"
+        var val = await AsyncMethods.GetMemberMethods()/*bah*/// who
+        #region even
+            ; // comments
+        #endregion";
+            var expected = AwaitTaskResultPropertyExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
+
+            AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
+        }
     }
 }

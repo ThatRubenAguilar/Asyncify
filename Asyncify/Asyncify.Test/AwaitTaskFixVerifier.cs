@@ -57,7 +57,10 @@ namespace Asyncify.Test
         
     }
 ";
-        // Starts at line 9 and col 0
+
+
+        protected const int TaskExpressionWrapperStartCol = 0;
+        protected const int TaskExpressionWrapperStartLine = 9;
         protected static readonly string TaskExpressionWrapper = @"
 using System;
 using System.Threading.Tasks;
@@ -66,12 +69,10 @@ class Test
 {{
     async Task TestMethod()
     {{
-        {0}
+{0}
     }}
 }}
 ";
-        protected const int TaskExpressionWrapperStartCol = 9;
-        protected const int TaskExpressionWrapperStartLine = 9;
 
         protected override CodeFixProvider GetCSharpCodeFixProvider()
         {
@@ -108,13 +109,20 @@ class Test
             var syntaxRegex = new Regex(expectedSyntax);
             var matches = syntaxRegex.Matches(source);
             var lineColTupleList = new List<Tuple<int, int>>();
+            var newLineEndingIndices = FindNewLineEndingLocations(source);
             foreach (Match match in matches)
             {
                 if (match.Success)
                 {
-                    var matchPrefix = source.Substring(0, source.Length - (source.Length - match.Index));
-                    var lineOffset = CountNewLine(matchPrefix);
-                    var colOffset = match.Index;
+                    var lineOffset = 0;
+                    var colOffset = 0;
+                    foreach (var newLineEndingIndex in newLineEndingIndices)
+                    {
+                        if (newLineEndingIndex > match.Index)
+                            break;
+                        colOffset = match.Index - newLineEndingIndex;
+                        lineOffset++;
+                    }
                     lineColTupleList.Add(new Tuple<int,int>(lineOffset, colOffset));
                 }
             }
@@ -122,22 +130,27 @@ class Test
             return lineColTupleList;
         }
 
-        protected static int CountNewLine(string input)
+        /// <summary>
+        /// Finds all the ending indices of a newline within a string
+        /// </summary>
+        /// <param name="input">string to find newlines in</param>
+        /// <returns>A list of the last indices of a newline sequences within the string</returns>
+        protected static IList<int> FindNewLineEndingLocations(string input)
         {
             var newLineCharArray = Environment.NewLine.ToCharArray();
-            int newLines = 0;
+            var newLineLocationList = new List<int>();
             if (newLineCharArray.Length > 1)
             {
                 int matchIndex = 0;
-                foreach (var ch in input)
+                for (int i = 0; i < input.Length; i++)
                 {
-                    if (ch == newLineCharArray[matchIndex])
+                    if (input[i] == newLineCharArray[matchIndex])
                     {
                         matchIndex++;
                         if (matchIndex >= newLineCharArray.Length)
                         {
                             matchIndex = 0;
-                            newLines++;
+                            newLineLocationList.Add(i);
                         }
                     }
                     else
@@ -149,13 +162,13 @@ class Test
             else
             {
                 var singleNewLineChar = newLineCharArray[0];
-                foreach (var ch in input)
+                for (int i = 0; i < input.Length; i++)
                 {
-                    if (ch == singleNewLineChar)
-                        newLines++;
+                    if (input[i] == singleNewLineChar)
+                        newLineLocationList.Add(i);
                 }
             }
-            return newLines;
+            return newLineLocationList;
         }
     }
 }
