@@ -122,6 +122,8 @@ namespace Asyncify
 
             var triviaList = relativeParent.ExtractTrivia(excludeKeepNodeTokens);
 
+            if (keepNode.HasTrailingTrivia)
+                triviaList.InsertRange(0, keepNode.GetTrailingTrivia());
 
             var alreadyParenthesized = relativeParent.Parent as ParenthesizedExpressionSyntax;
             // last node should be relative parent unless something comes after
@@ -131,14 +133,10 @@ namespace Asyncify
             if (resultUsed && alreadyParenthesized == null && callerIsGenericTask)
             {
                 // Move trivia from keep node tokens to outside parens as it more closely resembles what would be expected
-                var moveTrailingTrivia = excludeKeepNodeTokens.Last();
-                if (moveTrailingTrivia.HasLeadingTrivia || moveTrailingTrivia.HasTrailingTrivia)
-                    triviaList.InsertRange(0, moveTrailingTrivia.GetAllTrivia());
-
                 var newAwaitExpr = SyntaxFactory.AwaitExpression(keepNode.WithoutTrivia());
                 var newParenExpr =
                     SyntaxFactory.ParenthesizedExpression(newAwaitExpr)
-                        .WithLeadingTrivia(relativeParent.GetLeadingTrivia())
+                        .WithLeadingTrivia(keepNode.GetLeadingTrivia())
                         .WithTrailingTrivia(triviaList);
 
                 syntaxEditor.ReplaceNode(relativeParent, (node, gen) => newParenExpr);
@@ -146,7 +144,9 @@ namespace Asyncify
             else
             {
                 // Move trivia up with the removal of .GetAwaiter().GetResult()/.Result, we are already in parens or dont need parens so dont mess with it.
-                var newAwaitExpr = SyntaxFactory.AwaitExpression(keepNode.WithTrailingTrivia(triviaList));
+                var newAwaitExpr = SyntaxFactory.AwaitExpression(keepNode.WithoutTrivia())
+                    .WithLeadingTrivia(keepNode.GetLeadingTrivia())
+                    .WithTrailingTrivia(triviaList);
 
                 syntaxEditor.ReplaceNode(relativeParent, (node, gen) => newAwaitExpr);
             }

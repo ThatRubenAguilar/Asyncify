@@ -97,11 +97,11 @@ namespace Asyncify
                 return;
             }
 
-
+            // IDEA: Detect and allow fixes off of TaskAwaiter as well, would need to trace the source location of the awaiter through different levels of code.
             var parentTaskAwaiterName = identifierNameSyntax.Parent.ToStringWithoutTrivia();
-            // Trim ".GetResult"
+            // Trim ".GetAwaiter().GetResult", all trivia is stripped so it is normalized to this.
             var trimmedParentTaskAwaiterName = parentTaskAwaiterName.Substring(0,
-                parentTaskAwaiterName.Length - (AsyncifyResources.GetResultMethod.Length + 1));
+                parentTaskAwaiterName.Length - (AsyncifyResources.GetAwaiterMethod.Length + AsyncifyResources.GetResultMethod.Length + 4));
             // Save the threads! use await!
             var diagnostic = Diagnostic.Create(Rule, identifierNameSyntax.GetLocation(), trimmedParentTaskAwaiterName);
 

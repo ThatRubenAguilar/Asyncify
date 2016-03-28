@@ -44,6 +44,17 @@ namespace Asyncify.Test
     {
         public AsyncMemberMethods Field1 = null;
         public AsyncMemberMethods Property1 => null;
+        public Task Result = null;
+
+        public TaskAwaiter<AsyncMemberMethods> GetAwaiter() 
+        {
+            return null;
+        }
+        
+        public AsyncMemberMethods GetResult() 
+        {
+            return null;
+        }
 
         public Task<int> GetNumber()
         {
@@ -115,7 +126,7 @@ class Test
                 if (match.Success)
                 {
                     var lineOffset = 0;
-                    var colOffset = 0;
+                    var colOffset = match.Index + 1;
                     foreach (var newLineEndingIndex in newLineEndingIndices)
                     {
                         if (newLineEndingIndex > match.Index)
