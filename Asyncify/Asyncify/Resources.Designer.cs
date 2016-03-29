@@ -62,6 +62,33 @@ namespace Asyncify {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Consider using await on the Task over synchronous blocking method GetResult().
+        /// </summary>
+        internal static string AsyncifyGetResultDescription {
+            get {
+                return ResourceManager.GetString("AsyncifyGetResultDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Consider awaiting Task &apos;{0}&apos;.
+        /// </summary>
+        internal static string AsyncifyGetResultMessageFormat {
+            get {
+                return ResourceManager.GetString("AsyncifyGetResultMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use await over synchronous method GetResult().
+        /// </summary>
+        internal static string AsyncifyGetResultTitle {
+            get {
+                return ResourceManager.GetString("AsyncifyGetResultTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Consider using await on the Task over synchronous blocking property Result.
         /// </summary>
         internal static string AsyncifyResultDescription {

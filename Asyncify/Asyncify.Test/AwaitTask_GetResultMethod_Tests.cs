@@ -1,4 +1,6 @@
 using System;
+using Asyncify.Analyzers;
+using Asyncify.FixProviders;
 using Microsoft.CodeAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestHelper;
@@ -6,7 +8,7 @@ using TestHelper;
 namespace Asyncify.Test
 {
     [TestClass]
-    public class AwaitTask_GetResultMethod_Tests : AwaitTaskFixVerifier<ConsiderAwaitOverResultAnalyzer, ConsiderAwaitOverResultCodeFixProvider>
+    public class AwaitTask_GetResultMethod_Tests : AwaitTaskFixVerifier<ConsiderAwaitOverBlockingTaskGetResultAnalyzer, ConsiderAwaitOverBlockingTaskGetResultCodeFixProvider>
     {
 
         private DiagnosticResult AwaitTaskGetResultMethodExpectedResult(string testExpression, string resultCaller)
@@ -16,8 +18,8 @@ namespace Asyncify.Test
             var colLocation = TaskExpressionWrapperStartCol + lineColOffset.Item2;
             var expected = new DiagnosticResult
             {
-                Id = ConsiderAwaitOverResultAnalyzer.DiagnosticId,
-                Message = String.Format(ConsiderAwaitOverResultAnalyzer.MessageFormat.ToString(),
+                Id = ConsiderAwaitOverBlockingTaskGetResultAnalyzer.DiagnosticId,
+                Message = String.Format(ConsiderAwaitOverBlockingTaskGetResultAnalyzer.MessageFormat.ToString(),
                     resultCaller),
                 Severity = DiagnosticSeverity.Warning,
                 Locations =

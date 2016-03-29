@@ -32,12 +32,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Analyzers\ConsiderAwaitOverBlockingTaskGetResultAnalyzer.cs" />
+    <Compile Include="Analyzers\ConsiderAwaitOverBlockingTaskResultAnalyzer.cs" />
     <Compile Include="AsyncifyResources.cs" />
-    <Compile Include="ConsiderAwaitOverResultCodeFixProvider.cs" />
-    <Compile Include="ConsiderAwaitOverResultAnalyzer.cs" />
     <Compile Include="Extensions\ContextExtensions.cs" />
+    <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Extensions\NodeExtensions.cs" />
     <Compile Include="Extensions\SymbolExtensions.cs" />
+    <Compile Include="FixProviders\ConsiderAwaitOverBlockingTaskGetResultCodeFixProvider.cs" />
+    <Compile Include="FixProviders\ConsiderAwaitOverBlockingTaskResultCodeFixProvider.cs" />
     <Compile Include="Helpers\SyntaxFactoryHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources.Designer.cs">

@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace Asyncify
 {
-    internal class AsyncifyResources
+    internal static class AsyncifyResources
     {
         public static readonly Regex TaskRegex = new Regex("System.Threading.Tasks.Task");
         public static readonly Regex TaskGenericRegex = new Regex("System.Threading.Tasks.Task<");
