@@ -96,13 +96,13 @@ class Test
         }
 
         protected void AwaitTaskDiagnosticAndFix(string testExpression, DiagnosticResult expected,
-            string fixedExpression)
+            string fixedExpression, bool allowNewCompilerDiagnostics = false)
         {
             var testTaskClass = String.Format(TaskExpressionWrapper, testExpression);
             VerifyCSharpDiagnostic(new[] {testTaskClass, TaskStaticClass, TaskMemberClass}, expected);
 
             var fixTaskClass = String.Format(TaskExpressionWrapper, fixedExpression);
-            VerifyCSharpFix(testTaskClass, fixTaskClass, new[] {TaskStaticClass, TaskMemberClass});
+            VerifyCSharpFix(testTaskClass, fixTaskClass, new[] {TaskStaticClass, TaskMemberClass}, allowNewCompilerDiagnostics:allowNewCompilerDiagnostics);
         }
 
         protected Tuple<int, int> FindLineAndColOffset(string source, string expectedSyntax)

@@ -98,6 +98,27 @@ AsyncMethods.GetMemberMethods().Result;";
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
         }
 
+
+        [TestMethod, TestCategory("Await.Task.Result")]
+        public void Should_add_parenthesis_to_await_task_fix_on_generic_task_result_property_when_using_broken_syntax_task_field()
+        {
+            var testExpression = @"var val = AsyncMethods.GetMemberMethods().Result.Fi;";
+            var fixExpression = @"var val = (await AsyncMethods.GetMemberMethods()).Fi;";
+            var expected = AwaitTaskResultPropertyExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
+
+            AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression, true);
+        }
+
+        [TestMethod, TestCategory("Await.Task.Result")]
+        public void Should_not_add_parenthesis_to_await_task_fix_on_generic_task_result_property_when_using_broken_syntax()
+        {
+            var testExpression = @"var val = AsyncMethods.GetMemberMethods().Result";
+            var fixExpression = @"var val = await AsyncMethods.GetMemberMethods()";
+            var expected = AwaitTaskResultPropertyExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
+
+            AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression, true);
+        }
+
         #region Task.Result.Field
 
         [TestMethod, TestCategory("Await.Task.Result")]
