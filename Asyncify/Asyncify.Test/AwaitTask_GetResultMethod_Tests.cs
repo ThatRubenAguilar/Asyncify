@@ -16,7 +16,7 @@ namespace Asyncify.Test
             var lineColOffset = FindLineAndColOffset(testExpression, "GetResult()");
             var lineLocation = TaskExpressionWrapperStartLine + lineColOffset.Item1;
             var colLocation = TaskExpressionWrapperStartCol + lineColOffset.Item2;
-            var rule = AsyncifyRules.Rules[AsyncifyRules.AwaitTaskGetResultDiagnosticId];
+            var rule = AsyncifyRules.AwaitTaskGetResultRule;
             var expected = new DiagnosticResult
             {
                 Id = rule.Id,

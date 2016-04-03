@@ -13,7 +13,7 @@ namespace Asyncify.Analyzers
         /*
         NOTE: Analyzers are compact into as few classes as possible to minimize the amount of time rechecking for initial constraints like IsNonUserOrGeneratedCode. CodeFixProviders are organized according to fixes as to maintain sanity.
             */
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(AsyncifyRules.Rules[AsyncifyRules.AwaitTaskResultDiagnosticId], AsyncifyRules.Rules[AsyncifyRules.AwaitTaskGetResultDiagnosticId]); } }
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(AsyncifyRules.AwaitTaskResultRule, AsyncifyRules.AwaitTaskGetResultRule); } }
 
         public override void Initialize(AnalysisContext context)
         {
@@ -66,7 +66,7 @@ namespace Asyncify.Analyzers
                 parentTaskName.Length - (AsyncifyResources.ResultProperty.Length + 1));
 
             // Save the threads! use await!
-            var diagnostic = Diagnostic.Create(AsyncifyRules.Rules[AsyncifyRules.AwaitTaskResultDiagnosticId], identifierNameSyntax.GetLocation(), trimmedParentTaskName);
+            var diagnostic = Diagnostic.Create(AsyncifyRules.AwaitTaskResultRule, identifierNameSyntax.GetLocation(), trimmedParentTaskName);
 
             context.ReportDiagnostic(diagnostic);
         }
@@ -91,7 +91,7 @@ namespace Asyncify.Analyzers
             var trimmedParentTaskAwaiterName = parentTaskAwaiterName.Substring(0,
                 parentTaskAwaiterName.Length - (AsyncifyResources.GetAwaiterMethod.Length + AsyncifyResources.GetResultMethod.Length + 4));
             // Save the threads! use await!
-            var diagnostic = Diagnostic.Create(AsyncifyRules.Rules[AsyncifyRules.AwaitTaskGetResultDiagnosticId], identifierNameSyntax.GetLocation(), trimmedParentTaskAwaiterName);
+            var diagnostic = Diagnostic.Create(AsyncifyRules.AwaitTaskGetResultRule, identifierNameSyntax.GetLocation(), trimmedParentTaskAwaiterName);
 
             context.ReportDiagnostic(diagnostic);
         }

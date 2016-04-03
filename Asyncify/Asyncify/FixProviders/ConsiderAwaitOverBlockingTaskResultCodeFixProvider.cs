@@ -20,7 +20,7 @@ namespace Asyncify.FixProviders
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
-            get { return ImmutableArray.Create(AsyncifyRules.AwaitTaskResultDiagnosticId); }
+            get { return ImmutableArray.Create(AsyncifyDiagnosticIds.AwaitTaskResultDiagnosticId); }
         }
 
         public sealed override FixAllProvider GetFixAllProvider()
@@ -42,7 +42,6 @@ namespace Asyncify.FixProviders
             // Name check for Result Task property
             if (identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.ResultProperty))
             {
-
                 // Register a code action that will invoke the fix for .Result
                 context.RegisterCodeFix(
                     CodeAction.Create(

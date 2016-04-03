@@ -43,7 +43,7 @@ namespace Asyncify.Extensions
                         .WithLeadingTrivia(keepTaskNode.GetLeadingTrivia())
                         .WithTrailingTrivia(triviaList);
 
-                syntaxEditor.ReplaceNode(blockingTaskExpression, (node, gen) => newParenExpr);
+                syntaxEditor.ReplaceNode(blockingTaskExpression, newParenExpr);
             }
             else
             {
@@ -52,7 +52,7 @@ namespace Asyncify.Extensions
                     .WithLeadingTrivia(keepTaskNode.GetLeadingTrivia())
                     .WithTrailingTrivia(triviaList);
 
-                syntaxEditor.ReplaceNode(blockingTaskExpression, (node, gen) => newAwaitExpr);
+                syntaxEditor.ReplaceNode(blockingTaskExpression, newAwaitExpr);
             }
 
             return syntaxEditor.GetChangedRoot();

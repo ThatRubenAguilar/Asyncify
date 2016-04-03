@@ -34,14 +34,18 @@
   <ItemGroup>
     <Compile Include="Analyzers\ConsiderAwaitOverBlockingTaskResultAnalyzer.cs" />
     <Compile Include="Analyzers\ConsiderAwaitOverBlockingTaskWaitAnalyzer.cs" />
+    <Compile Include="AsyncifyDiagnosticIds.cs" />
     <Compile Include="AsyncifyResources.cs" />
     <Compile Include="AsyncifyRules.cs" />
     <Compile Include="Extensions\ContextExtensions.cs" />
     <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Extensions\NodeExtensions.cs" />
     <Compile Include="Extensions\SymbolExtensions.cs" />
+    <Compile Include="Extensions\TokenExtensions.cs" />
     <Compile Include="FixProviders\ConsiderAwaitOverBlockingTaskGetResultCodeFixProvider.cs" />
     <Compile Include="FixProviders\ConsiderAwaitOverBlockingTaskResultCodeFixProvider.cs" />
+    <Compile Include="FixProviders\ConsiderAwaitOverBlockingTaskWaitCodeFixProvider.cs" />
+    <Compile Include="FixProviders\ConsiderRemovingBlockingGenericTaskWaitCodeFixProvider.cs" />
     <Compile Include="Helpers\SyntaxFactoryHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources.Designer.cs">

@@ -249,6 +249,22 @@ namespace Asyncify.Extensions
             return triviaList;
         }
 
+        /// <summary>
+        /// Extracts trivia from tokens within the node
+        /// </summary>
+        /// <returns></returns>
+        public static List<SyntaxTrivia> ExtractTrivia(this SyntaxNode node)
+        {
+            var triviaList = new List<SyntaxTrivia>();
+            foreach (var token in node.DescendantTokens())
+            {
+                if (token.HasLeadingTrivia || token.HasTrailingTrivia)
+                    triviaList.AddRange(token.GetAllTrivia());
+            }
+
+            return triviaList;
+        }
+
         public static string ToStringWithoutTrivia(this SyntaxNode node)
         {
             StringBuilder sb = new StringBuilder();
@@ -257,6 +273,47 @@ namespace Asyncify.Extensions
                 sb.Append(token);
             }
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Gets the token that is before stopToken or the default.
+        /// </summary>
+        /// <param name="node">node to search in</param>
+        /// <param name="stopToken">token to stop at</param>
+        /// <returns></returns>
+        public static SyntaxToken GetTokenBeforeOrDefault(this SyntaxNode node, SyntaxToken stopToken)
+        {
+            SyntaxToken followToken = default(SyntaxToken);
+
+            foreach (var token in node.DescendantTokens(descendIntoTrivia:true))
+            {
+                if (token.Equals(stopToken))
+                    break;
+                followToken = token;
+            }
+
+            return followToken;
+        }
+
+        /// <summary>
+        /// Gets the token that is before stopNode's first token or the default.
+        /// </summary>
+        /// <param name="node">node to search in</param>
+        /// <param name="stopNode">node whose first token to stop at</param>
+        /// <returns></returns>
+        public static SyntaxToken GetTokenBeforeOrDefault(this SyntaxNode node, SyntaxNode stopNode)
+        {
+            SyntaxToken followToken = default(SyntaxToken);
+            var stopToken = stopNode.GetFirstToken(true, true, true, true);
+
+            foreach (var token in node.DescendantTokens(descendIntoTrivia:true))
+            {
+                if (token.Equals(stopToken))
+                    break;
+                followToken = token;
+            }
+
+            return followToken;
         }
     }
 }

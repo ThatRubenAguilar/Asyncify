@@ -71,7 +71,7 @@ namespace Asyncify.Extensions
         {
             foreach (var currMethod in methods)
             {
-                if (currMethod.DoParamatersMatch(parameters))
+                if (currMethod.DoParametersMatch(parameters))
                 {
                     return currMethod;
                 }
@@ -108,7 +108,7 @@ namespace Asyncify.Extensions
                 return false;
             }
 
-            return method.DoParamatersMatch(methodInfo.GetParameters().Select(pi => pi.ParameterType).ToArray());
+            return method.DoParametersMatch(methodInfo.GetParameters().Select(pi => pi.ParameterType).ToArray());
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace Asyncify.Extensions
         /// <returns>
         /// True if the parameters match the types, false otherwise.
         /// </returns>
-        public static Boolean DoParamatersMatch(this IMethodSymbol method, Type[] parameters)
+        public static Boolean DoParametersMatch(this IMethodSymbol method, Type[] parameters)
         {
             Int32 methodParamCount = method.Parameters.Count();
             if (methodParamCount != parameters.Length)

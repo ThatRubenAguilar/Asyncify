@@ -64,81 +64,108 @@ namespace Asyncify {
         /// <summary>
         ///   Looks up a localized string similar to Consider using await on the Task over synchronous blocking method GetResult().
         /// </summary>
-        internal static string AsyncifyGetResultDescription {
+        internal static string GetResultDescription {
             get {
-                return ResourceManager.GetString("AsyncifyGetResultDescription", resourceCulture);
+                return ResourceManager.GetString("GetResultDescription", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Consider awaiting Task &apos;{0}&apos;.
         /// </summary>
-        internal static string AsyncifyGetResultMessageFormat {
+        internal static string GetResultMessageFormat {
             get {
-                return ResourceManager.GetString("AsyncifyGetResultMessageFormat", resourceCulture);
+                return ResourceManager.GetString("GetResultMessageFormat", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Use await over synchronous method GetResult().
         /// </summary>
-        internal static string AsyncifyGetResultTitle {
+        internal static string GetResultTitle {
             get {
-                return ResourceManager.GetString("AsyncifyGetResultTitle", resourceCulture);
+                return ResourceManager.GetString("GetResultTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Consider removing Task call to synchronous blocking method Wait().
+        /// </summary>
+        internal static string RemoveWaitDescription {
+            get {
+                return ResourceManager.GetString("RemoveWaitDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Consider removing Wait() call on Task &apos;{0}&apos;.
+        /// </summary>
+        internal static string RemoveWaitMessageFormat {
+            get {
+                return ResourceManager.GetString("RemoveWaitMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove extraneous call to synchronous method Wait().
+        /// </summary>
+        internal static string RemoveWaitTitle {
+            get {
+                return ResourceManager.GetString("RemoveWaitTitle", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Consider using await on the Task over synchronous blocking property Result.
         /// </summary>
-        internal static string AsyncifyResultDescription {
+        internal static string ResultDescription {
             get {
-                return ResourceManager.GetString("AsyncifyResultDescription", resourceCulture);
+                return ResourceManager.GetString("ResultDescription", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Consider awaiting Task &apos;{0}&apos;.
         /// </summary>
-        internal static string AsyncifyResultMessageFormat {
+        internal static string ResultMessageFormat {
             get {
-                return ResourceManager.GetString("AsyncifyResultMessageFormat", resourceCulture);
+                return ResourceManager.GetString("ResultMessageFormat", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Use await over synchronous property Result.
         /// </summary>
-        internal static string AsyncifyResultTitle {
+        internal static string ResultTitle {
             get {
-                return ResourceManager.GetString("AsyncifyResultTitle", resourceCulture);
+                return ResourceManager.GetString("ResultTitle", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Consider using await on the Task over synchronous blocking method Wait().
         /// </summary>
-        internal static string AsyncifyWaitDescription {
+        internal static string WaitDescription {
             get {
-                return ResourceManager.GetString("AsyncifyWaitDescription", resourceCulture);
+                return ResourceManager.GetString("WaitDescription", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Consider awaiting Task &apos;{0}&apos;.
         /// </summary>
-        internal static string AsyncifyWaitMessageFormat {
+        internal static string WaitMessageFormat {
             get {
-                return ResourceManager.GetString("AsyncifyWaitMessageFormat", resourceCulture);
+                return ResourceManager.GetString("WaitMessageFormat", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Use await over synchronous method Wait().
         /// </summary>
-        internal static string AsyncifyWaitTitle {
+        internal static string WaitTitle {
             get {
-                return ResourceManager.GetString("AsyncifyWaitTitle", resourceCulture);
+                return ResourceManager.GetString("WaitTitle", resourceCulture);
             }
         }
     }

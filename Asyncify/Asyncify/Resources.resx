@@ -117,39 +117,51 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AsyncifyGetResultDescription" xml:space="preserve">
+  <data name="GetResultDescription" xml:space="preserve">
     <value>Consider using await on the Task over synchronous blocking method GetResult()</value>
     <comment>An optional longer localizable description of the diagnostic.</comment>
   </data>
-  <data name="AsyncifyGetResultMessageFormat" xml:space="preserve">
+  <data name="GetResultMessageFormat" xml:space="preserve">
     <value>Consider awaiting Task '{0}'</value>
     <comment>The format-able message the diagnostic displays.</comment>
   </data>
-  <data name="AsyncifyGetResultTitle" xml:space="preserve">
+  <data name="GetResultTitle" xml:space="preserve">
     <value>Use await over synchronous method GetResult()</value>
     <comment>The title of the diagnostic.</comment>
   </data>
-  <data name="AsyncifyResultDescription" xml:space="preserve">
+  <data name="RemoveWaitDescription" xml:space="preserve">
+    <value>Consider removing Task call to synchronous blocking method Wait()</value>
+    <comment>An optional longer localizable description of the diagnostic.</comment>
+  </data>
+  <data name="RemoveWaitMessageFormat" xml:space="preserve">
+    <value>Consider removing Wait() call on Task '{0}'</value>
+    <comment>The format-able message the diagnostic displays.</comment>
+  </data>
+  <data name="RemoveWaitTitle" xml:space="preserve">
+    <value>Remove extraneous call to synchronous method Wait()</value>
+    <comment>The title of the diagnostic.</comment>
+  </data>
+  <data name="ResultDescription" xml:space="preserve">
     <value>Consider using await on the Task over synchronous blocking property Result</value>
     <comment>An optional longer localizable description of the diagnostic.</comment>
   </data>
-  <data name="AsyncifyResultMessageFormat" xml:space="preserve">
+  <data name="ResultMessageFormat" xml:space="preserve">
     <value>Consider awaiting Task '{0}'</value>
     <comment>The format-able message the diagnostic displays.</comment>
   </data>
-  <data name="AsyncifyResultTitle" xml:space="preserve">
+  <data name="ResultTitle" xml:space="preserve">
     <value>Use await over synchronous property Result</value>
     <comment>The title of the diagnostic.</comment>
   </data>
-  <data name="AsyncifyWaitDescription" xml:space="preserve">
+  <data name="WaitDescription" xml:space="preserve">
     <value>Consider using await on the Task over synchronous blocking method Wait()</value>
     <comment>An optional longer localizable description of the diagnostic.</comment>
   </data>
-  <data name="AsyncifyWaitMessageFormat" xml:space="preserve">
+  <data name="WaitMessageFormat" xml:space="preserve">
     <value>Consider awaiting Task '{0}'</value>
     <comment>The format-able message the diagnostic displays.</comment>
   </data>
-  <data name="AsyncifyWaitTitle" xml:space="preserve">
+  <data name="WaitTitle" xml:space="preserve">
     <value>Use await over synchronous method Wait()</value>
     <comment>The title of the diagnostic.</comment>
   </data>

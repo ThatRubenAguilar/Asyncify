@@ -11,18 +11,7 @@ namespace Asyncify.Analyzers
     public class ConsiderAwaitOverBlockingTaskWaitAnalyzer : DiagnosticAnalyzer
     {
 
-        public const string DiagnosticId = "ASYNC0003";
-
-        // You can change these strings in the Resources.resx file. If you do not want your analyzer to be localize-able, you can use regular strings for Title and MessageFormat.
-        // See https://github.com/dotnet/roslyn/blob/master/docs/analyzers/Localizing%20Analyzers.md for more on localization
-        public static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.AsyncifyWaitTitle), Resources.ResourceManager, typeof(Resources));
-        public static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.AsyncifyWaitMessageFormat), Resources.ResourceManager, typeof(Resources));
-        public static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.AsyncifyWaitDescription), Resources.ResourceManager, typeof(Resources));
-        private const string Category = "Refactoring";
-
-        private static DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
-
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(AsyncifyRules.AwaitTaskWaitRule, AsyncifyRules.RemoveGenericTaskWaitRule); } }
 
         public override void Initialize(AnalysisContext context)
         {
@@ -58,18 +47,33 @@ namespace Asyncify.Analyzers
 
             // Ensure we have a method
             // Ensure we have the Threading.Task
-            // Ensure we do not have a generic Threading.Task
-            if (methodSymbol?.ContainingType == null || !AsyncifyResources.TaskRegex.IsMatch(methodSymbol.ContainingType.ToString()) || AsyncifyResources.TaskGenericRegex.IsMatch(methodSymbol.ContainingType.ToString()))
+            if (methodSymbol?.ContainingType == null || !AsyncifyResources.TaskRegex.IsMatch(methodSymbol.ContainingType.ToString()))
             {
                 return;
             }
-            
+
+            // If we have a generic Threading.Task suggest removal instead
+            if (AsyncifyResources.TaskGenericRegex.IsMatch(methodSymbol.ContainingType.ToString()))
+            {
+                AnalyzeTaskWait(context, identifierNameSyntax, AsyncifyRules.RemoveGenericTaskWaitRule);
+            }
+            // Proceed with await suggestion
+            else
+            {
+                AnalyzeTaskWait(context, identifierNameSyntax, AsyncifyRules.AwaitTaskWaitRule);
+            }
+        }
+
+        private static void AnalyzeTaskWait(SyntaxNodeAnalysisContext context, IdentifierNameSyntax identifierNameSyntax, DiagnosticDescriptor rule)
+        {
             var parentTaskAwaiterName = identifierNameSyntax.Parent.ToStringWithoutTrivia();
             // Trim ".Wait", all trivia is stripped so it is normalized to this.
             var trimmedParentTaskAwaiterName = parentTaskAwaiterName.Substring(0,
                 parentTaskAwaiterName.Length - (AsyncifyResources.WaitMethod.Length + 1));
             // Save the threads! use await!
-            var diagnostic = Diagnostic.Create(Rule, identifierNameSyntax.GetLocation(), trimmedParentTaskAwaiterName);
+            var diagnostic = Diagnostic.Create(rule,
+                identifierNameSyntax.GetLocation(),
+                trimmedParentTaskAwaiterName);
 
             context.ReportDiagnostic(diagnostic);
         }

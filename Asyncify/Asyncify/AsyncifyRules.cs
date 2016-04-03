@@ -7,52 +7,74 @@ namespace Asyncify
 {
     public static class AsyncifyRules
     {
-        public const string AwaitTaskResultDiagnosticId = "ASYNC0001";
-        public const string AwaitTaskGetResultDiagnosticId = "ASYNC0002";
-        public const string AwaitTaskWaitDiagnosticId = "ASYNC0003";
-        public const string RemoveGenericTaskWaitDiagnosticId = "ASYNC0004";
+        public static DiagnosticDescriptor AwaitTaskResultRule { get; }
+        public static DiagnosticDescriptor AwaitTaskGetResultRule { get; }
+        public static DiagnosticDescriptor AwaitTaskWaitRule { get; }
+        public static DiagnosticDescriptor RemoveGenericTaskWaitRule { get; }
 
-        public static readonly ReadOnlyDictionary<string, DiagnosticDescriptor> Rules = new ReadOnlyDictionary<string, DiagnosticDescriptor>(CreateAsyncifyRules());
-
-        private static IDictionary<string, DiagnosticDescriptor> CreateAsyncifyRules()
+        static AsyncifyRules()
         {
-            var rules = new Dictionary<string, DiagnosticDescriptor>();
-
-            CreateAwaitTaskResultRule(rules);
-            CreateAwaitTaskGetResultRule(rules);
-
-            return rules;
+            AwaitTaskResultRule = CreateAwaitTaskResultRule();
+            AwaitTaskGetResultRule = CreateAwaitTaskGetResultRule();
+            AwaitTaskWaitRule = CreateAwaitTaskWaitRule();
+            RemoveGenericTaskWaitRule = CreateRemoveGenericTaskWaitRule();
         }
-
-        private static void CreateAwaitTaskResultRule(Dictionary<string, DiagnosticDescriptor> rules)
+        
+        private static DiagnosticDescriptor CreateAwaitTaskResultRule()
         {
-            string DiagnosticId = AwaitTaskResultDiagnosticId;
+            string DiagnosticId = AsyncifyDiagnosticIds.AwaitTaskResultDiagnosticId;
 
-            LocalizableString Title = new LocalizableResourceString(nameof(Resources.AsyncifyResultTitle),
+            LocalizableString title = new LocalizableResourceString(nameof(Resources.ResultTitle),
                 Resources.ResourceManager, typeof (Resources));
-            LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.AsyncifyResultMessageFormat),
+            LocalizableString messageFormat = new LocalizableResourceString(nameof(Resources.ResultMessageFormat),
                 Resources.ResourceManager, typeof (Resources));
-            LocalizableString Description = new LocalizableResourceString(nameof(Resources.AsyncifyResultDescription),
+            LocalizableString description = new LocalizableResourceString(nameof(Resources.ResultDescription),
                 Resources.ResourceManager, typeof (Resources));
             string Category = "Refactoring";
 
-            DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category,
-                DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
+            DiagnosticDescriptor rule = new DiagnosticDescriptor(DiagnosticId, title, messageFormat, Category,
+                DiagnosticSeverity.Warning, isEnabledByDefault: true, description: description);
 
-            rules.Add(DiagnosticId, Rule);
+            return rule;
         }
-        private static void CreateAwaitTaskGetResultRule(Dictionary<string, DiagnosticDescriptor> rules)
+        private static DiagnosticDescriptor CreateAwaitTaskGetResultRule()
         {
-            string DiagnosticId = AwaitTaskGetResultDiagnosticId;
+            string DiagnosticId = AsyncifyDiagnosticIds.AwaitTaskGetResultDiagnosticId;
 
-            LocalizableString Title = new LocalizableResourceString(nameof(Resources.AsyncifyGetResultTitle), Resources.ResourceManager, typeof(Resources));
-            LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.AsyncifyGetResultMessageFormat), Resources.ResourceManager, typeof(Resources));
-            LocalizableString Description = new LocalizableResourceString(nameof(Resources.AsyncifyGetResultDescription), Resources.ResourceManager, typeof(Resources));
+            LocalizableString title = new LocalizableResourceString(nameof(Resources.GetResultTitle), Resources.ResourceManager, typeof(Resources));
+            LocalizableString messageFormat = new LocalizableResourceString(nameof(Resources.GetResultMessageFormat), Resources.ResourceManager, typeof(Resources));
+            LocalizableString description = new LocalizableResourceString(nameof(Resources.GetResultDescription), Resources.ResourceManager, typeof(Resources));
             string Category = "Refactoring";
 
-            DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
+            DiagnosticDescriptor rule = new DiagnosticDescriptor(DiagnosticId, title, messageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: description);
 
-            rules.Add(DiagnosticId, Rule);
+            return rule;
+        }
+        private static DiagnosticDescriptor CreateAwaitTaskWaitRule()
+        {
+            string DiagnosticId = AsyncifyDiagnosticIds.AwaitTaskWaitDiagnosticId;
+
+            LocalizableString title = new LocalizableResourceString(nameof(Resources.WaitTitle), Resources.ResourceManager, typeof(Resources));
+            LocalizableString messageFormat = new LocalizableResourceString(nameof(Resources.WaitMessageFormat), Resources.ResourceManager, typeof(Resources));
+            LocalizableString description = new LocalizableResourceString(nameof(Resources.WaitDescription), Resources.ResourceManager, typeof(Resources));
+            string Category = "Refactoring";
+
+            DiagnosticDescriptor rule = new DiagnosticDescriptor(DiagnosticId, title, messageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: description);
+
+            return rule;
+        }
+        private static DiagnosticDescriptor CreateRemoveGenericTaskWaitRule()
+        {
+            string DiagnosticId = AsyncifyDiagnosticIds.RemoveGenericTaskWaitDiagnosticId;
+
+            LocalizableString title = new LocalizableResourceString(nameof(Resources.RemoveWaitTitle), Resources.ResourceManager, typeof(Resources));
+            LocalizableString messageFormat = new LocalizableResourceString(nameof(Resources.RemoveWaitMessageFormat), Resources.ResourceManager, typeof(Resources));
+            LocalizableString description = new LocalizableResourceString(nameof(Resources.RemoveWaitDescription), Resources.ResourceManager, typeof(Resources));
+            string Category = "Refactoring";
+
+            DiagnosticDescriptor rule = new DiagnosticDescriptor(DiagnosticId, title, messageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: description);
+
+            return rule;
         }
     }
 }
