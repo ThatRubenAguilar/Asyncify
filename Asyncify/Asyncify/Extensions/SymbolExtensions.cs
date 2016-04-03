@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 
 // Code originated from https://github.com/Wintellect/Wintellect.Analyzers/blob/master/Source/Wintellect.Analyzers/Wintellect.Analyzers/Extensions/SymbolExtensions.cs
@@ -316,6 +317,59 @@ namespace Asyncify.Extensions
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Determines whether type matches the partialMatch regex
+        /// </summary>
+        /// <param name="type">type to check</param>
+        /// <param name="partialMatch">partial type regex to match</param>
+        /// <returns></returns>
+        public static bool PartialMatchType(this ITypeSymbol type, Regex partialMatch)
+        {
+            return partialMatch.IsMatch(type.ToString());
+        }
+
+        /// <summary>
+        /// Determines whether the type or ancestor types match the partialMatch regex, optionally stopping early for a stopMatch
+        /// </summary>
+        /// <param name="type">type to check</param>
+        /// <param name="partialMatch">partial type regex to match</param>
+        /// <param name="stopMatch">regex to stop once matched</param>
+        /// <returns></returns>
+        public static bool PartialMatchAncestorTypesOrSelf(this ITypeSymbol type, Regex partialMatch, Regex stopMatch=null)
+        {
+            bool matchSuccessful = false;
+            var searchType = type;
+            if (stopMatch != null)
+            {
+                do
+                {
+                    if (partialMatch.IsMatch(searchType.ToString()))
+                    {
+                        matchSuccessful = true;
+                        break;
+                    }
+                    else if (stopMatch.IsMatch(searchType.ToString()))
+                    {
+                        break;
+                    }
+                    searchType = searchType.BaseType;
+                } while (searchType != null);
+            }
+            else
+            {
+                do
+                {
+                    if (partialMatch.IsMatch(searchType.ToString()))
+                    {
+                        matchSuccessful = true;
+                        break;
+                    }
+                    searchType = searchType.BaseType;
+                } while (searchType != null);
+            }
+            return matchSuccessful;
         }
     }
 }

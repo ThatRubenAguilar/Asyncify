@@ -42,11 +42,6 @@ namespace Asyncify.Analyzers
         
         private static void AnalyzeWaitMethod(SyntaxNodeAnalysisContext context, IdentifierNameSyntax identifierNameSyntax)
         {
-            var waitInvoker = identifierNameSyntax.Parent.ChildNodes().First();
-
-            var invokerTypeInfo = context.SemanticModel.GetTypeInfo(waitInvoker, context.CancellationToken);
-            
-
             var symbolInfo = context.SemanticModel.GetSymbolInfo(identifierNameSyntax, context.CancellationToken);
 
             var methodSymbol = symbolInfo.Symbol as IMethodSymbol;
@@ -58,8 +53,16 @@ namespace Asyncify.Analyzers
                 return;
             }
 
+            var waitInvoker = identifierNameSyntax.Parent.ChildNodes().First();
+
+            var invokerTypeInfo = context.SemanticModel.GetTypeInfo(waitInvoker, context.CancellationToken);
+
+            bool isGenericTask =
+                invokerTypeInfo.ConvertedType.PartialMatchAncestorTypesOrSelf(AsyncifyResources.TaskGenericRegex,
+                    AsyncifyResources.TaskRegex);
+
             // If we have a generic Threading.Task suggest removal instead
-            if (AsyncifyResources.TaskGenericRegex.IsMatch(methodSymbol.ContainingType.ToString()))
+            if (isGenericTask)
             {
                 AnalyzeTaskWait(context, identifierNameSyntax, AsyncifyRules.RemoveGenericTaskWaitRule);
             }
