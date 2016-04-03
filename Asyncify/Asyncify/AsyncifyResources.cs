@@ -11,8 +11,11 @@ namespace Asyncify
         public const string ResultProperty = "Result";
         public const string GetResultMethod = "GetResult";
         public const string GetAwaiterMethod = "GetAwaiter";
+        public const string WaitMethod = "Wait";
 
         public const string KeyUseAwaitResult = "UseAwaitResult";
         public const string KeyUseAwaitGetResult = "UseAwaitGetResult";
+        public const string KeyUseAwaitWait = "UseAwaitWait";
+        public const string KeyRemoveWait = "RemoveWait";
     }
 }

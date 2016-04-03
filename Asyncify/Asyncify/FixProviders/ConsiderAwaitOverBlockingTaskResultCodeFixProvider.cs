@@ -20,7 +20,7 @@ namespace Asyncify.FixProviders
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
-            get { return ImmutableArray.Create(ConsiderAwaitOverBlockingTaskResultAnalyzer.DiagnosticId); }
+            get { return ImmutableArray.Create(AsyncifyRules.AwaitTaskResultDiagnosticId); }
         }
 
         public sealed override FixAllProvider GetFixAllProvider()

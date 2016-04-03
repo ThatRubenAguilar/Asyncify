@@ -114,5 +114,32 @@ namespace Asyncify {
                 return ResourceManager.GetString("AsyncifyResultTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Consider using await on the Task over synchronous blocking method Wait().
+        /// </summary>
+        internal static string AsyncifyWaitDescription {
+            get {
+                return ResourceManager.GetString("AsyncifyWaitDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Consider awaiting Task &apos;{0}&apos;.
+        /// </summary>
+        internal static string AsyncifyWaitMessageFormat {
+            get {
+                return ResourceManager.GetString("AsyncifyWaitMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use await over synchronous method Wait().
+        /// </summary>
+        internal static string AsyncifyWaitTitle {
+            get {
+                return ResourceManager.GetString("AsyncifyWaitTitle", resourceCulture);
+            }
+        }
     }
 }

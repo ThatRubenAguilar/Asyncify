@@ -32,9 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Analyzers\ConsiderAwaitOverBlockingTaskGetResultAnalyzer.cs" />
     <Compile Include="Analyzers\ConsiderAwaitOverBlockingTaskResultAnalyzer.cs" />
+    <Compile Include="Analyzers\ConsiderAwaitOverBlockingTaskWaitAnalyzer.cs" />
     <Compile Include="AsyncifyResources.cs" />
+    <Compile Include="AsyncifyRules.cs" />
     <Compile Include="Extensions\ContextExtensions.cs" />
     <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Extensions\NodeExtensions.cs" />

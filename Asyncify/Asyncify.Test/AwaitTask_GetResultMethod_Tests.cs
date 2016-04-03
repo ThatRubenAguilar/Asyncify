@@ -8,7 +8,7 @@ using TestHelper;
 namespace Asyncify.Test
 {
     [TestClass]
-    public class AwaitTask_GetResultMethod_Tests : AwaitTaskFixVerifier<ConsiderAwaitOverBlockingTaskGetResultAnalyzer, ConsiderAwaitOverBlockingTaskGetResultCodeFixProvider>
+    public class AwaitTask_GetResultMethod_Tests : AwaitTaskFixVerifier<ConsiderAwaitOverBlockingTaskResultAnalyzer, ConsiderAwaitOverBlockingTaskGetResultCodeFixProvider>
     {
 
         private DiagnosticResult AwaitTaskGetResultMethodExpectedResult(string testExpression, string resultCaller)
@@ -16,12 +16,13 @@ namespace Asyncify.Test
             var lineColOffset = FindLineAndColOffset(testExpression, "GetResult()");
             var lineLocation = TaskExpressionWrapperStartLine + lineColOffset.Item1;
             var colLocation = TaskExpressionWrapperStartCol + lineColOffset.Item2;
+            var rule = AsyncifyRules.Rules[AsyncifyRules.AwaitTaskGetResultDiagnosticId];
             var expected = new DiagnosticResult
             {
-                Id = ConsiderAwaitOverBlockingTaskGetResultAnalyzer.DiagnosticId,
-                Message = String.Format(ConsiderAwaitOverBlockingTaskGetResultAnalyzer.MessageFormat.ToString(),
+                Id = rule.Id,
+                Message = String.Format(rule.MessageFormat.ToString(),
                     resultCaller),
-                Severity = DiagnosticSeverity.Warning,
+                Severity = rule.DefaultSeverity,
                 Locations =
                     new[]
                     {

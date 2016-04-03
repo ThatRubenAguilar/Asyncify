@@ -141,4 +141,16 @@
     <value>Use await over synchronous property Result</value>
     <comment>The title of the diagnostic.</comment>
   </data>
+  <data name="AsyncifyWaitDescription" xml:space="preserve">
+    <value>Consider using await on the Task over synchronous blocking method Wait()</value>
+    <comment>An optional longer localizable description of the diagnostic.</comment>
+  </data>
+  <data name="AsyncifyWaitMessageFormat" xml:space="preserve">
+    <value>Consider awaiting Task '{0}'</value>
+    <comment>The format-able message the diagnostic displays.</comment>
+  </data>
+  <data name="AsyncifyWaitTitle" xml:space="preserve">
+    <value>Use await over synchronous method Wait()</value>
+    <comment>The title of the diagnostic.</comment>
+  </data>
 </root>

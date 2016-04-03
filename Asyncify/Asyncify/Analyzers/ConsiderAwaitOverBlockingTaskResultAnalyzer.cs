@@ -10,19 +10,10 @@ namespace Asyncify.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ConsiderAwaitOverBlockingTaskResultAnalyzer : DiagnosticAnalyzer
     {
-
-        public const string DiagnosticId = "ASYNC0001";
-
-        // You can change these strings in the Resources.resx file. If you do not want your analyzer to be localize-able, you can use regular strings for Title and MessageFormat.
-        // See https://github.com/dotnet/roslyn/blob/master/docs/analyzers/Localizing%20Analyzers.md for more on localization
-        public static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.AsyncifyResultTitle), Resources.ResourceManager, typeof(Resources));
-        public static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.AsyncifyResultMessageFormat), Resources.ResourceManager, typeof(Resources));
-        public static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.AsyncifyResultDescription), Resources.ResourceManager, typeof(Resources));
-        private const string Category = "Refactoring";
-
-        private static DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
-
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
+        /*
+        NOTE: Analyzers are compact into as few classes as possible to minimize the amount of time rechecking for initial constraints like IsNonUserOrGeneratedCode. CodeFixProviders are organized according to fixes as to maintain sanity.
+            */
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(AsyncifyRules.Rules[AsyncifyRules.AwaitTaskResultDiagnosticId], AsyncifyRules.Rules[AsyncifyRules.AwaitTaskGetResultDiagnosticId]); } }
 
         public override void Initialize(AnalysisContext context)
         {
@@ -47,6 +38,11 @@ namespace Asyncify.Analyzers
             {
                 AnalyzeResultProperty(context, identifierNameSyntax);
             }
+            // Name check for GetResult TaskAwaiter method
+            else if (identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.GetResultMethod))
+            {
+                AnalyzeGetResultMethod(context, identifierNameSyntax);
+            }
 
         }
 
@@ -70,7 +66,32 @@ namespace Asyncify.Analyzers
                 parentTaskName.Length - (AsyncifyResources.ResultProperty.Length + 1));
 
             // Save the threads! use await!
-            var diagnostic = Diagnostic.Create(Rule, identifierNameSyntax.GetLocation(), trimmedParentTaskName);
+            var diagnostic = Diagnostic.Create(AsyncifyRules.Rules[AsyncifyRules.AwaitTaskResultDiagnosticId], identifierNameSyntax.GetLocation(), trimmedParentTaskName);
+
+            context.ReportDiagnostic(diagnostic);
+        }
+
+
+        private static void AnalyzeGetResultMethod(SyntaxNodeAnalysisContext context, IdentifierNameSyntax identifierNameSyntax)
+        {
+            var symbolInfo = context.SemanticModel.GetSymbolInfo(identifierNameSyntax, context.CancellationToken);
+
+            var methodSymbol = symbolInfo.Symbol as IMethodSymbol;
+
+            // Ensure we have a method
+            // Ensure we have the Threading.Task
+            if (methodSymbol?.ContainingType == null || !AsyncifyResources.TaskAwaiterRegex.IsMatch(methodSymbol.ContainingType.ToString()))
+            {
+                return;
+            }
+
+            // IDEA: Detect and allow fixes off of TaskAwaiter as well, would need to trace the source location of the awaiter through different levels of code.
+            var parentTaskAwaiterName = identifierNameSyntax.Parent.ToStringWithoutTrivia();
+            // Trim ".GetAwaiter().GetResult", all trivia is stripped so it is normalized to this.
+            var trimmedParentTaskAwaiterName = parentTaskAwaiterName.Substring(0,
+                parentTaskAwaiterName.Length - (AsyncifyResources.GetAwaiterMethod.Length + AsyncifyResources.GetResultMethod.Length + 4));
+            // Save the threads! use await!
+            var diagnostic = Diagnostic.Create(AsyncifyRules.Rules[AsyncifyRules.AwaitTaskGetResultDiagnosticId], identifierNameSyntax.GetLocation(), trimmedParentTaskAwaiterName);
 
             context.ReportDiagnostic(diagnostic);
         }

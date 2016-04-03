@@ -105,6 +105,13 @@ class Test
             VerifyCSharpFix(testTaskClass, fixTaskClass, new[] {TaskStaticClass, TaskMemberClass}, allowNewCompilerDiagnostics:allowNewCompilerDiagnostics);
         }
 
+
+        /// <summary>
+        /// Finds one line and column offset of the expectedSyntax. Errors on more than 1 found.
+        /// </summary>
+        /// <param name="source">source text to search</param>
+        /// <param name="expectedSyntax">expected syntax to find</param>
+        /// <returns>tuple of line and column offsets of the start location of the expected syntax</returns>
         protected Tuple<int, int> FindLineAndColOffset(string source, string expectedSyntax)
         {
             var lineColOffsetsList = FindLineAndColOffsets(source, expectedSyntax);
@@ -115,6 +122,12 @@ class Test
             return lineColOffsetsList.FirstOrDefault();
         }
 
+        /// <summary>
+        /// Finds all line and column offsets of the expectedSyntax
+        /// </summary>
+        /// <param name="source">source text to search</param>
+        /// <param name="expectedSyntax">expected syntax to find</param>
+        /// <returns>tuple of line and column offsets of the start locations of the expected syntax</returns>
         protected IList<Tuple<int, int>> FindLineAndColOffsets(string source, string expectedSyntax)
         {
             var syntaxRegex = new Regex(expectedSyntax);

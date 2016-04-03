@@ -16,12 +16,13 @@ namespace Asyncify.Test
             var lineColOffset = FindLineAndColOffset(testExpression, "Result");
             var lineLocation = TaskExpressionWrapperStartLine + lineColOffset.Item1;
             var colLocation = TaskExpressionWrapperStartCol + lineColOffset.Item2;
+            var rule = AsyncifyRules.Rules[AsyncifyRules.AwaitTaskResultDiagnosticId];
             var expected = new DiagnosticResult
             {
-                Id = ConsiderAwaitOverBlockingTaskResultAnalyzer.DiagnosticId,
-                Message = String.Format(ConsiderAwaitOverBlockingTaskResultAnalyzer.MessageFormat.ToString(),
+                Id = rule.Id,
+                Message = String.Format(rule.MessageFormat.ToString(),
                     resultCaller),
-                Severity = DiagnosticSeverity.Warning,
+                Severity = rule.DefaultSeverity,
                 Locations =
                     new[]
                     {
