@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Linq;
 using Asyncify.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -41,6 +42,11 @@ namespace Asyncify.Analyzers
         
         private static void AnalyzeWaitMethod(SyntaxNodeAnalysisContext context, IdentifierNameSyntax identifierNameSyntax)
         {
+            var waitInvoker = identifierNameSyntax.Parent.ChildNodes().First();
+
+            var invokerTypeInfo = context.SemanticModel.GetTypeInfo(waitInvoker, context.CancellationToken);
+            
+
             var symbolInfo = context.SemanticModel.GetSymbolInfo(identifierNameSyntax, context.CancellationToken);
 
             var methodSymbol = symbolInfo.Symbol as IMethodSymbol;

@@ -55,7 +55,7 @@ namespace Asyncify.Test
             var testExpression = @"var val = (new AsyncMemberMethods()).Result;";
 
             var testTaskClass = String.Format(TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(new[] { testTaskClass, TaskStaticClass, TaskMemberClass });
+            VerifyCSharpDiagnostic(new[] { testTaskClass, TaskStaticClass, TaskMemberClass, TaskChildClass });
         }
         [TestMethod, TestCategory("Await.Task.Result")]
         public void Should_not_add_parenthesis_to_await_task_fix_on_generic_task_result_property_when_return_value_not_used()

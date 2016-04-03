@@ -13,25 +13,47 @@ namespace Asyncify.Test
         where TAnalyzer : DiagnosticAnalyzer, new()
         where TProvider : CodeFixProvider, new()
     {
+        protected static readonly string TaskChildClass = @"
+    using System;
+    using System.Threading.Tasks;
+
+    class TaskChild : Task
+    {
+        public TaskChild() : base(() => { })
+        {
+        
+        }
+    }
+
+    class TaskChild<T> : Task<T>
+    {
+        public TaskChild() : base(() => default(T))
+        {
+        
+        }
+    
+    }
+";
+
         protected static readonly string TaskStaticClass = @"
     using System;
     using System.Threading.Tasks;
 
     static class AsyncMethods
     {
-        public static Task<int> GetNumber()
+        public static TaskChild<int> GetNumber()
         {
-            return Task.FromResult(42);
+            return new TaskChild<int>();
         }
 
-        public static Task PerformProcessing()
+        public static TaskChild PerformProcessing()
         {
-            return Task.Delay(TimeSpan.FromMilliseconds(10));
+            return new TaskChild();
         }
 
-        public static Task<AsyncMemberMethods> GetMemberMethods()
+        public static TaskChild<AsyncMemberMethods> GetMemberMethods()
         {
-            return Task.FromResult(new AsyncMemberMethods());
+            return new TaskChild<AsyncMemberMethods>();
         }
     }
 ";
@@ -56,17 +78,17 @@ namespace Asyncify.Test
             return null;
         }
 
-        public Task<int> GetNumber()
+        public TaskChild<int> GetNumber()
         {
-            return Task.FromResult(42);
+            return new TaskChild<int>();
         }
 
-        public Task PerformProcessing()
+        public TaskChild PerformProcessing()
         {
-            return Task.Delay(TimeSpan.FromMilliseconds(10));
+            return new TaskChild();
         }
         
-    }
+        }
 ";
 
 
@@ -99,10 +121,10 @@ class Test
             string fixedExpression, bool allowNewCompilerDiagnostics = false)
         {
             var testTaskClass = String.Format(TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(new[] {testTaskClass, TaskStaticClass, TaskMemberClass}, expected);
+            VerifyCSharpDiagnostic(new[] {testTaskClass, TaskStaticClass, TaskMemberClass, TaskChildClass }, expected);
 
             var fixTaskClass = String.Format(TaskExpressionWrapper, fixedExpression);
-            VerifyCSharpFix(testTaskClass, fixTaskClass, new[] {TaskStaticClass, TaskMemberClass}, allowNewCompilerDiagnostics:allowNewCompilerDiagnostics);
+            VerifyCSharpFix(testTaskClass, fixTaskClass, new[] {TaskStaticClass, TaskMemberClass, TaskChildClass }, allowNewCompilerDiagnostics:allowNewCompilerDiagnostics);
         }
 
 
