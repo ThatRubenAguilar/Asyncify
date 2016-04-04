@@ -73,15 +73,6 @@ namespace Asyncify.FixProviders
 
             var triviaList = fullTaskExpression.ExtractTrivia();
 
-            //var containingBlock = fullTaskExpression.Parent;
-
-            //var previousToken = containingBlock.GetTokenBeforeOrDefault(fullTaskExpression);
-
-            //if (previousToken.HasLeadingTrivia || previousToken.HasTrailingTrivia)
-            //    triviaList.InsertRange(0, previousToken.GetAllTrivia());
-
-            //var newLastToken = previousToken.WithTrailingTrivia(triviaList);
-
             var emptyExpr = SyntaxFactory.EmptyStatement(
                 SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)
                 .WithTrailingTrivia(triviaList));
