@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using Asyncify.Analyzers;
 using Asyncify.FixProviders;
+using Asyncify.Test.Extensions;
 using TestHelper;
 
 namespace Asyncify.Test
@@ -11,25 +12,9 @@ namespace Asyncify.Test
     public class AwaitTask_ResultProperty_Tests : AwaitTaskFixVerifier<ConsiderAwaitOverBlockingTaskResultAnalyzer, ConsiderAwaitOverBlockingTaskResultCodeFixProvider>
     {
 
-        private DiagnosticResult AwaitTaskResultPropertyExpectedResult(string testExpression, string resultCaller)
+        private DiagnosticResult AwaitTaskResultPropertyExpectedResult(string testExpression, string callerTaskExpression)
         {
-            var lineColOffset = FindLineAndColOffset(testExpression, "Result");
-            var lineLocation = TaskExpressionWrapperStartLine + lineColOffset.Item1;
-            var colLocation = TaskExpressionWrapperStartCol + lineColOffset.Item2;
-            var rule = AsyncifyRules.AwaitTaskResultRule;
-            var expected = new DiagnosticResult
-            {
-                Id = rule.Id,
-                Message = String.Format(rule.MessageFormat.ToString(),
-                    resultCaller),
-                Severity = rule.DefaultSeverity,
-                Locations =
-                    new[]
-                    {
-                        new DiagnosticResultLocation("Test0.cs", lineLocation, colLocation)
-                    }
-            };
-            return expected;
+            return AwaitTaskExpectedResult(testExpression, callerTaskExpression, "Result", AsyncifyRules.AwaitTaskResultRule);
         }
 
         [TestMethod, TestCategory("Await.Task.Result")]
@@ -74,28 +59,16 @@ AsyncMethods.GetMemberMethods().Result;";
         [TestMethod, TestCategory("Await.Task.Result")]
         public void Should_keep_trivia_when_not_adding_parenthesis_in_await_task_fix_on_generic_task_result_property()
         {
-            var testExpression = @"
-        var val = /*please*/
-        #region do
-        #endregion
-        AsyncMethods.GetMemberMethods(
-        #region stop
-        #endregion
-        )/*bah*/.// who
-        #region even
-            Result; // comments
-        #endregion";
-            var fixExpression = @"
-        var val = /*please*/
-        #region do
-        #endregion
-        await AsyncMethods.GetMemberMethods(
-        #region stop
-        #endregion
-        )/*bah*/// who
-        #region even
-            ; // comments
-        #endregion";
+            var testExpression = $@"
+        var val = {FullTriviaText}
+        AsyncMethods.GetMemberMethods({FullTriviaText}
+        ){FullTriviaText}.{FullTriviaText}
+        Result{FullTriviaText}; {FullTriviaText}";
+            var fixExpression = $@"
+        var val = {FullTriviaText}
+        await AsyncMethods.GetMemberMethods({FullTriviaText}
+        ){FullTriviaText}{FullTriviaText}
+        {FullTriviaText}; {FullTriviaText}";
             var expected = AwaitTaskResultPropertyExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -148,30 +121,22 @@ AsyncMethods.GetMemberMethods().Result;";
         [TestMethod, TestCategory("Await.Task.Result")]
         public void Should_keep_trivia_when_adding_parenthesis_in_await_task_fix_on_generic_task_result_property_when_using_task_field()
         {
-            var testExpression = @"
-        var val = /*please*/
-        #region do
-        #endregion
-        AsyncMethods.GetMemberMethods(
-        #region stop
-        #endregion
-        )/*bah*/.// who
-        #region even
-            Result // comments
-            .Field1;
-        #endregion";
-            var fixExpression = @"
-        var val = /*please*/
-        #region do
-        #endregion
-        (await AsyncMethods.GetMemberMethods(
-        #region stop
-        #endregion
-        ))/*bah*/// who
-        #region even
-            // comments
-            .Field1;
-        #endregion";
+            var testExpression = $@"
+        var val = {FullTriviaText}
+        AsyncMethods.GetMemberMethods({FullTriviaText}
+        ){FullTriviaText}.
+        {FullTriviaText}
+        Result{FullTriviaText}
+        .Field1{FullTriviaText}; {FullTriviaText}
+";
+            var fixExpression = $@"
+        var val = {FullTriviaText}
+        (await AsyncMethods.GetMemberMethods({FullTriviaText}
+        )){FullTriviaText}
+        {FullTriviaText}
+        {FullTriviaText}
+        .Field1{FullTriviaText}; {FullTriviaText}
+";
             var expected = AwaitTaskResultPropertyExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -202,30 +167,20 @@ AsyncMethods.GetMemberMethods().Result;";
         [TestMethod, TestCategory("Await.Task.Result")]
         public void Should_keep_trivia_when_adding_parenthesis_in_await_task_fix_on_generic_task_result_property_when_using_task_property()
         {
-            var testExpression = @"
-        var val = /*please*/
-        #region do
-        #endregion
-        AsyncMethods.GetMemberMethods(
-        #region stop
-        #endregion
-        )/*bah*/.// who
-        #region even
-            Result // comments
-            .Property1;
-        #endregion";
-            var fixExpression = @"
-        var val = /*please*/
-        #region do
-        #endregion
-        (await AsyncMethods.GetMemberMethods(
-        #region stop
-        #endregion
-        ))/*bah*/// who
-        #region even
-            // comments
-            .Property1;
-        #endregion";
+            var testExpression = $@"
+        var val = {FullTriviaText}
+        AsyncMethods.GetMemberMethods({FullTriviaText}
+        ){FullTriviaText}.
+        {FullTriviaText}
+        Result {FullTriviaText}
+        .Property1{FullTriviaText}; {FullTriviaText}";
+            var fixExpression = $@"
+        var val = {FullTriviaText}
+        (await AsyncMethods.GetMemberMethods({FullTriviaText}
+        )){FullTriviaText}
+        {FullTriviaText}
+        {FullTriviaText}
+        .Property1{FullTriviaText}; {FullTriviaText}";
             var expected = AwaitTaskResultPropertyExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -257,30 +212,20 @@ AsyncMethods.GetMemberMethods().Result;";
         [TestMethod, TestCategory("Await.Task.Result")]
         public void Should_keep_trivia_when_adding_parenthesis_in_await_task_fix_on_generic_task_result_property_when_using_task_method()
         {
-            var testExpression = @"
-        var val = /*please*/
-        #region do
-        #endregion
-        AsyncMethods.GetMemberMethods(
-        #region stop
-        #endregion
-        )/*bah*/.// who
-        #region even
-            Result // comments
-            .GetNumber();
-        #endregion";
-            var fixExpression = @"
-        var val = /*please*/
-        #region do
-        #endregion
-        (await AsyncMethods.GetMemberMethods(
-        #region stop
-        #endregion
-        ))/*bah*/// who
-        #region even
-            // comments
-            .GetNumber();
-        #endregion";
+            var testExpression = $@"
+        var val = {FullTriviaText}
+        AsyncMethods.GetMemberMethods({FullTriviaText}
+        ){FullTriviaText}.
+        {FullTriviaText}
+        Result{FullTriviaText}
+        .GetNumber(){FullTriviaText}; {FullTriviaText}";
+            var fixExpression = $@"
+        var val = {FullTriviaText}
+        (await AsyncMethods.GetMemberMethods({FullTriviaText}
+        )){FullTriviaText}
+        {FullTriviaText}
+        {FullTriviaText}
+        .GetNumber(){FullTriviaText}; {FullTriviaText}";
             var expected = AwaitTaskResultPropertyExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);

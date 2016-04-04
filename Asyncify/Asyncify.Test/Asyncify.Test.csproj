@@ -104,6 +104,8 @@
   <ItemGroup>
     <Compile Include="AwaitTaskFixVerifier.cs" />
     <Compile Include="AwaitTask_GetResultMethod_Tests.cs" />
+    <Compile Include="AwaitTask_WaitMethod_Tests.cs" />
+    <Compile Include="Extensions\SourceCodeTextExtensions.cs" />
     <Compile Include="Verifiers\CodeFixVerifier.cs" />
     <Compile Include="Verifiers\DiagnosticVerifier.cs" />
     <Compile Include="Helpers\CodeFixVerifier.Helper.cs" />

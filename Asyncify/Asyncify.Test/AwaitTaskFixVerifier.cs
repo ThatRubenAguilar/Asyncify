@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Asyncify.Test.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -13,6 +14,20 @@ namespace Asyncify.Test
         where TAnalyzer : DiagnosticAnalyzer, new()
         where TProvider : CodeFixProvider, new()
     {
+        // NOTE: Indent code using this to 2 tabs or face the wrath of the whitespace formatter
+        protected static readonly string FullTriviaText = @"// One Line Comment 
+#if Directive
+        /* Comment If */
+#else
+        /* Comment Else */
+#endif
+        /*
+        Multi Line Comment 
+        */
+        #region Region
+        #endregion
+";
+
         protected static readonly string TaskChildClass = @"
     using System;
     using System.Threading.Tasks;
@@ -78,6 +93,11 @@ namespace Asyncify.Test
             return null;
         }
 
+        public void Wait() 
+        {
+
+        }
+
         public TaskChild<int> GetNumber()
         {
             return new TaskChild<int>();
@@ -116,6 +136,7 @@ class Test
         {
             return new TAnalyzer();
         }
+        
 
         protected void AwaitTaskDiagnosticAndFix(string testExpression, DiagnosticResult expected,
             string fixedExpression, bool allowNewCompilerDiagnostics = false)
@@ -128,93 +149,25 @@ class Test
         }
 
 
-        /// <summary>
-        /// Finds one line and column offset of the expectedSyntax. Errors on more than 1 found.
-        /// </summary>
-        /// <param name="source">source text to search</param>
-        /// <param name="expectedSyntax">expected syntax to find</param>
-        /// <returns>tuple of line and column offsets of the start location of the expected syntax</returns>
-        protected Tuple<int, int> FindLineAndColOffset(string source, string expectedSyntax)
+        protected DiagnosticResult AwaitTaskExpectedResult(string testExpression, string callerTaskExpression, string blockingCallCode, DiagnosticDescriptor rule)
         {
-            var lineColOffsetsList = FindLineAndColOffsets(source, expectedSyntax);
-            if (lineColOffsetsList.Count > 1)
-                throw new ArgumentOutOfRangeException(nameof(expectedSyntax),
-                    $"Expected to find 0 or 1 matches, found {lineColOffsetsList.Count}");
-
-            return lineColOffsetsList.FirstOrDefault();
+            var lineColOffset = testExpression.FindLineAndColOffset(blockingCallCode);
+            var lineLocation = TaskExpressionWrapperStartLine + lineColOffset.Item1;
+            var colLocation = TaskExpressionWrapperStartCol + lineColOffset.Item2;
+            var expected = new DiagnosticResult
+            {
+                Id = rule.Id,
+                Message = String.Format(rule.MessageFormat.ToString(),
+                    callerTaskExpression),
+                Severity = rule.DefaultSeverity,
+                Locations =
+                    new[]
+                    {
+                        new DiagnosticResultLocation("Test0.cs", lineLocation, colLocation)
+                    }
+            };
+            return expected;
         }
 
-        /// <summary>
-        /// Finds all line and column offsets of the expectedSyntax
-        /// </summary>
-        /// <param name="source">source text to search</param>
-        /// <param name="expectedSyntax">expected syntax to find</param>
-        /// <returns>tuple of line and column offsets of the start locations of the expected syntax</returns>
-        protected IList<Tuple<int, int>> FindLineAndColOffsets(string source, string expectedSyntax)
-        {
-            var syntaxRegex = new Regex(expectedSyntax);
-            var matches = syntaxRegex.Matches(source);
-            var lineColTupleList = new List<Tuple<int, int>>();
-            var newLineEndingIndices = FindNewLineEndingLocations(source);
-            foreach (Match match in matches)
-            {
-                if (match.Success)
-                {
-                    var lineOffset = 0;
-                    var colOffset = match.Index + 1;
-                    foreach (var newLineEndingIndex in newLineEndingIndices)
-                    {
-                        if (newLineEndingIndex > match.Index)
-                            break;
-                        colOffset = match.Index - newLineEndingIndex;
-                        lineOffset++;
-                    }
-                    lineColTupleList.Add(new Tuple<int,int>(lineOffset, colOffset));
-                }
-            }
-
-            return lineColTupleList;
-        }
-
-        /// <summary>
-        /// Finds all the ending indices of a newline within a string
-        /// </summary>
-        /// <param name="input">string to find newlines in</param>
-        /// <returns>A list of the last indices of a newline sequences within the string</returns>
-        protected static IList<int> FindNewLineEndingLocations(string input)
-        {
-            var newLineCharArray = Environment.NewLine.ToCharArray();
-            var newLineLocationList = new List<int>();
-            if (newLineCharArray.Length > 1)
-            {
-                int matchIndex = 0;
-                for (int i = 0; i < input.Length; i++)
-                {
-                    if (input[i] == newLineCharArray[matchIndex])
-                    {
-                        matchIndex++;
-                        if (matchIndex >= newLineCharArray.Length)
-                        {
-                            matchIndex = 0;
-                            newLineLocationList.Add(i);
-                        }
-                    }
-                    else
-                    {
-                        matchIndex = 0;
-                    }
-                }
-            }
-            else
-            {
-                var singleNewLineChar = newLineCharArray[0];
-                for (int i = 0; i < input.Length; i++)
-                {
-                    if (input[i] == singleNewLineChar)
-                        newLineLocationList.Add(i);
-                }
-            }
-            return newLineLocationList;
-        }
     }
 }

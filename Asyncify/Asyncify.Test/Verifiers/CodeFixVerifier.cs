@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -7,6 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Asyncify.Test.Extensions;
 
 namespace TestHelper
 {
@@ -130,7 +132,31 @@ namespace TestHelper
 
             //after applying all of the code fixes, compare the resulting string to the inputted one
             var actual = GetStringFromDocument(document);
-            Assert.AreEqual(newSource, actual);
+
+            var mismatchIndex = DiffersAtIndex(newSource, actual);
+            if (mismatchIndex != -1)
+            {
+                var lineColOffset = newSource.FindLineAndColOffset(mismatchIndex);
+                Assert.AreEqual(newSource, actual, $"Sources differ at line {lineColOffset.Item1} and column {lineColOffset.Item2}");
+            }
+            else
+                Assert.AreEqual(newSource, actual); // Fallback in case DifferAtIndex fails.
+        }
+
+        /// <summary>
+        /// Compare two strings and return the index of the first difference.  Return -1 if the strings are equal.
+        /// </summary>
+        /// <param name="s1"></param>
+        /// <param name="s2"></param>
+        /// <returns></returns>
+        int DiffersAtIndex(string s1, string s2)
+        {
+            int index = 0;
+            int min = Math.Min(s1.Length, s2.Length);
+            while (index < min && s1[index] == s2[index])
+                index++;
+
+            return (index == min && s1.Length == s2.Length) ? -1 : index;
         }
     }
 }
