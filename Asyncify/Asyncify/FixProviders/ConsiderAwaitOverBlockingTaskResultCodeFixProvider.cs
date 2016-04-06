@@ -66,15 +66,12 @@ namespace Asyncify.FixProviders
 
             // Cant call .Result off of a non generic Task.
             var newRoot = blockingTaskExpression.AwaitBlockingTaskSyntax(syntaxEditor, keepTaskNode, true);
+            
 
             // Replace the old node
             var newDocument = document.WithSyntaxRoot(newRoot);
             return Task.FromResult(newDocument);
         }
-
-        
-
-        
         
     }
 }
