@@ -18,7 +18,7 @@ namespace Asyncify.Analyzers
         {
             // See https://github.com/dotnet/roslyn/blob/master/docs/analyzers/Analyzer%20Actions%20Semantics.md for more information
             
-            context.RegisterSyntaxNodeAction(AnalyzeNode, SyntaxKind.IdentifierName);
+            context.RegisterSyntaxNodeAction(AnalyzeNode, SyntaxKind.SimpleMemberAccessExpression);
             
         }
 
@@ -30,8 +30,13 @@ namespace Asyncify.Analyzers
                 return;
             }
 
-            var identifierNameSyntax = (IdentifierNameSyntax)context.Node;
-            
+            var memberAccessExpression = (MemberAccessExpressionSyntax)context.Node;
+
+            var identifierNameSyntax = memberAccessExpression.ChildNodes().OfType<IdentifierNameSyntax>().LastOrDefault();
+
+            if (identifierNameSyntax == null)
+                return;
+
             // Name check for Wait method
             if (identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.WaitMethod))
             {
