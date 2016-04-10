@@ -82,11 +82,6 @@ namespace Asyncify.RefactorProviders
                 return document;
             
             var syntaxEditor = new SyntaxEditor(root, document.Project.Solution.Workspace);
-
-            var lambdaReturnStatement = SyntaxFactory.ReturnStatement(lambdaBody);
-            var lambdaBlockBody = SyntaxFactory.Block(new[] {lambdaReturnStatement});
-
-            syntaxEditor.ReplaceNode(lambdaBody, lambdaBlockBody);
             
             var containingExpr = containingLambda.ChildNodes().FirstOrDefault(n => n.Contains(awaitExpr));
 
@@ -94,10 +89,37 @@ namespace Asyncify.RefactorProviders
             if (containingExpr == null)
                 return document;
 
-            // Extract await to local variable
-            // TODO: Replace in lambdaBody with identifier for extract var
-            // TODO: Insert type decl in array in block
-            return document;
+            // Get type returned by await expression
+            var awaitedType = awaitExpr.GetAwaitedType(semanticModel);
+
+            // This refactoring should only be picked up by nested calls which should only be possible on generic tasks, but avoid crashes anyway
+            if (awaitedType == null)
+                return document;
+
+            var defaultVarName = awaitExpr.GenerateDefaultUnusedLocalVariableName("taskResult", semanticModel);
+            
+            LocalDeclarationStatementSyntax extractedAwaitDeclaration = awaitExpr.ExtractToLocalVariable(semanticModel, awaitedType, defaultVarName);
+            
+            // Replace the old await expression with the new local variable
+            var awaitVarIdentifierName = SyntaxFactory.IdentifierName(defaultVarName);
+
+            var lambdaSyntaxEditor = new SyntaxEditor(lambdaBody, document.Project.Solution.Workspace);
+            lambdaSyntaxEditor.ReplaceNode(awaitExpr, awaitVarIdentifierName);
+            var transformedLambdaBody = lambdaSyntaxEditor.GetChangedRoot() as ExpressionSyntax;
+
+            if (transformedLambdaBody == null)
+                return document;
+
+            var lambdaReturnStatement = SyntaxFactory.ReturnStatement(transformedLambdaBody);
+            var lambdaBlockBody = SyntaxFactory.Block(extractedAwaitDeclaration, lambdaReturnStatement);
+            
+            // Replace old single line lambda with lambda block that has extracted variable and return value 
+            syntaxEditor.ReplaceNode(lambdaBody, lambdaBlockBody);
+            
+            var newRoot = syntaxEditor.GetChangedRoot();
+            // Replace the old node
+            var newDocument = document.WithSyntaxRoot(newRoot);
+            return newDocument;
 
         }
 
@@ -107,11 +129,6 @@ namespace Asyncify.RefactorProviders
 
             var syntaxEditor = new SyntaxEditor(root, document.Project.Solution.Workspace);
 
-            return await ExtractAwaitToVariable(document, syntaxEditor, awaitExpr, containingSyntax, cancellationToken);
-        }
-
-        private static async Task<Document> ExtractAwaitToVariable(Document document, SyntaxEditor syntaxEditor, AwaitExpressionSyntax awaitExpr, SyntaxNode containingSyntax, CancellationToken cancellationToken)
-        {
             var containingExpr = containingSyntax.ChildNodes().FirstOrDefault(n => n.Contains(awaitExpr));
 
             // Houdini await expression somehow disappeared, but lets not crash
@@ -125,9 +142,7 @@ namespace Asyncify.RefactorProviders
 
             // This refactoring should only be picked up by nested calls which should only be possible on generic tasks, but avoid crashes anyway
             if (awaitedType == null)
-            {
                 return document;
-            }
 
             var defaultVarName = awaitExpr.GenerateDefaultUnusedLocalVariableName("taskResult", semanticModel);
 
@@ -137,5 +152,6 @@ namespace Asyncify.RefactorProviders
             var newDocument = document.WithSyntaxRoot(newRoot);
             return newDocument;
         }
+        
     }
 }
