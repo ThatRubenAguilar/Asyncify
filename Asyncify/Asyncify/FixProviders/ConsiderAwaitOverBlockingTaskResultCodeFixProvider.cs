@@ -16,7 +16,7 @@ namespace Asyncify.FixProviders
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ConsiderAwaitOverBlockingTaskResultCodeFixProvider)), Shared]
     public class ConsiderAwaitOverBlockingTaskResultCodeFixProvider : CodeFixProvider
     {
-        private const string title = "await Task.";
+        private const string title = "Await Task.";
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds
         {

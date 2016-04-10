@@ -16,7 +16,7 @@ namespace Asyncify.FixProviders
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ConsiderRemovingBlockingGenericTaskWaitCodeFixProvider)), Shared]
     public class ConsiderRemovingBlockingGenericTaskWaitCodeFixProvider : CodeFixProvider
     {
-        private const string title = "remove Task.Wait";
+        private const string title = "Remove Task.Wait";
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
@@ -42,7 +42,7 @@ namespace Asyncify.FixProviders
             // Name check for Wait() Task method
             if (identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.WaitMethod))
             {
-                var semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken);
+                var semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
                 var symbolInfo = semanticModel.GetSymbolInfo(identifierNameSyntax, context.CancellationToken);
                 var methodSymbol = (IMethodSymbol)symbolInfo.Symbol;
 

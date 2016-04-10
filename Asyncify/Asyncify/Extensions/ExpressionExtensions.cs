@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -56,6 +57,101 @@ namespace Asyncify.Extensions
             }
 
             return syntaxEditor.GetChangedRoot();
+        }
+
+        /// <summary>
+        /// Generates an unused local variable name
+        /// </summary>
+        /// <param name="expr">Expression whose location should be searched for local variable visibility</param>
+        /// <param name="defaultName">Name used as prefix if it is used already</param>
+        /// <param name="semanticModel">Semantic model of the document</param>
+        /// <returns>A variable name unused locally</returns>
+        public static string GenerateDefaultUnusedLocalVariableName(this ExpressionSyntax expr,
+            string defaultName, SemanticModel semanticModel)
+        {
+            var defaultVarName = defaultName;
+
+            var visibleVars = semanticModel.LookupSymbols(expr.SpanStart, name: defaultVarName);
+            int counter = 1;
+            while (!visibleVars.IsEmpty)
+            {
+                defaultVarName = $"{defaultName}{counter}";
+                counter++;
+                visibleVars = semanticModel.LookupSymbols(expr.SpanStart, name: defaultVarName);
+            }
+            return defaultVarName;
+        }
+
+        /// <summary>
+        /// Returns the unwrapped type that an awaited expression returns.
+        /// </summary>
+        /// <param name="awaitExpr">await expression to extract type from</param>
+        /// <param name="model">semantic model</param>
+        /// <returns>unwrapped type that expr returns or null if it returns void</returns>
+        public static ITypeSymbol GetAwaitedType(this AwaitExpressionSyntax awaitExpr, SemanticModel model)
+        {
+            var callerSymbol = model.GetAwaitExpressionInfo(awaitExpr);
+
+            if (callerSymbol.GetResultMethod.ReturnsVoid)
+                return null;
+            
+            return callerSymbol.GetResultMethod.ReturnType;
+        }
+
+        /// <summary>
+        /// Extracts out an expression to a local variable declaration
+        /// </summary>
+        /// <param name="expr">Expression to extract</param>
+        /// <param name="semanticModel">Semantic model of the expression</param>
+        /// <param name="variableType">Type of the extracted variable</param>
+        /// <param name="varName">Name of the variable</param>
+        /// <returns>Local declaration statement syntax with extracted expression.</returns>
+        public static LocalDeclarationStatementSyntax ExtractToLocalVariable(this ExpressionSyntax expr, SemanticModel semanticModel, ITypeSymbol variableType, string varName)
+        {
+            var minimalTypeString = variableType.ToMinimalDisplayString(semanticModel,
+                expr.SpanStart);
+
+            // Create full local declaration by moving the expression
+            var varTypeDeclaration = SyntaxFactory.IdentifierName(minimalTypeString);
+            var varEqualsClause = SyntaxFactory.EqualsValueClause(expr);
+            var varIdentifier = SyntaxFactory.Identifier(varName);
+            var varDeclarator = SyntaxFactory.VariableDeclarator(varIdentifier, null, varEqualsClause);
+
+            var varDeclaratorList = SyntaxFactory.SeparatedList(new[]
+            {
+                varDeclarator
+            });
+
+            var extractedDeclaration =
+                SyntaxFactory.LocalDeclarationStatement(SyntaxFactory.VariableDeclaration(varTypeDeclaration,
+                    varDeclaratorList));
+            return extractedDeclaration;
+        }
+
+        /// <summary>
+        /// Extract an await expression to a local variable
+        /// </summary>
+        /// <param name="awaitExpr">Await expression to extract</param>
+        /// <param name="syntaxEditor">Editor to use</param>
+        /// <param name="semanticModel">Semantic model of the await expression tree</param>
+        /// <param name="awaitContainingExpr">Expression which fully contains the await expression, used to position the insert for the local variable declaration</param>
+        /// <param name="awaitedType">Unwrapped type returned by the await expression</param>
+        /// <param name="varName">Name of the local variable</param>
+        /// <returns>New modified root after extraction</returns>
+        public static SyntaxNode ExtractAwaitExpressionToVariable(this AwaitExpressionSyntax awaitExpr, SyntaxEditor syntaxEditor, SemanticModel semanticModel, SyntaxNode awaitContainingExpr, ITypeSymbol awaitedType, string varName)
+        {
+
+            LocalDeclarationStatementSyntax extractedAwaitDeclaration = awaitExpr.ExtractToLocalVariable(semanticModel, awaitedType, varName);
+
+            syntaxEditor.InsertBefore(awaitContainingExpr, extractedAwaitDeclaration);
+
+            // Replace the old await expression with the new local variable
+            var awaitVarIdentifierName = SyntaxFactory.IdentifierName(varName);
+
+            syntaxEditor.ReplaceNode(awaitExpr, awaitVarIdentifierName);
+
+            var newRoot = syntaxEditor.GetChangedRoot();
+            return newRoot;
         }
     }
 }

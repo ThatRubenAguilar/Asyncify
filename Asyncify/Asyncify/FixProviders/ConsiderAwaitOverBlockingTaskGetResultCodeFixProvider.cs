@@ -17,7 +17,7 @@ namespace Asyncify.FixProviders
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ConsiderAwaitOverBlockingTaskGetResultCodeFixProvider)), Shared]
     public class ConsiderAwaitOverBlockingTaskGetResultCodeFixProvider : CodeFixProvider
     {
-        private const string title = "await Task.";
+        private const string title = "Await Task.";
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
@@ -78,7 +78,7 @@ namespace Asyncify.FixProviders
             var keepTaskNode = (ExpressionSyntax)blockingTaskExpression.DescendantNodes().Take(4).Last();
 
 
-            var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
+            var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
             var symbolInfo = semanticModel.GetSymbolInfo(getAwaiterSyntax, cancellationToken);
             var methodSymbol = (IMethodSymbol)symbolInfo.Symbol;
             var callerIsGenericTask = AsyncifyResources.TaskGenericRegex.IsMatch(methodSymbol.ContainingType.ToString());

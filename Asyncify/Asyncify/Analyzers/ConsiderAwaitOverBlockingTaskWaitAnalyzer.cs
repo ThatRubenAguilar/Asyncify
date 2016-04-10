@@ -36,17 +36,16 @@ namespace Asyncify.Analyzers
 
             if (identifierNameSyntax == null)
                 return;
-
-            // Name check for Wait method
-            if (identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.WaitMethod))
-            {
-                AnalyzeWaitMethod(context, identifierNameSyntax);
-            }
-
+        
+            AnalyzeWaitMethod(context, identifierNameSyntax);
         }
         
         private static void AnalyzeWaitMethod(SyntaxNodeAnalysisContext context, IdentifierNameSyntax identifierNameSyntax)
         {
+            // Name check for Wait method
+            if (!identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.WaitMethod))
+                return;
+
             var symbolInfo = context.SemanticModel.GetSymbolInfo(identifierNameSyntax, context.CancellationToken);
 
             var methodSymbol = symbolInfo.Symbol as IMethodSymbol;

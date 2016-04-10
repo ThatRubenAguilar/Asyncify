@@ -38,22 +38,17 @@ namespace Asyncify.Analyzers
 
             if (identifierNameSyntax == null)
                 return;
-
-            // Name check for Result Task property
-            if (identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.ResultProperty))
-            {
-                AnalyzeResultProperty(context, identifierNameSyntax);
-            }
-            // Name check for GetResult TaskAwaiter method
-            else if (identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.GetResultMethod))
-            {
-                AnalyzeGetResultMethod(context, identifierNameSyntax);
-            }
-
+            
+            AnalyzeResultProperty(context, identifierNameSyntax);
+            AnalyzeGetResultMethod(context, identifierNameSyntax);
         }
 
         private static void AnalyzeResultProperty(SyntaxNodeAnalysisContext context, IdentifierNameSyntax identifierNameSyntax)
         {
+            // Name check for Result Task property
+            if (!identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.ResultProperty))
+                return;
+
             var symbolInfo = context.SemanticModel.GetSymbolInfo(identifierNameSyntax, context.CancellationToken);
 
             var propertySymbol = symbolInfo.Symbol as IPropertySymbol;
@@ -80,6 +75,10 @@ namespace Asyncify.Analyzers
 
         private static void AnalyzeGetResultMethod(SyntaxNodeAnalysisContext context, IdentifierNameSyntax identifierNameSyntax)
         {
+            // Name check for GetResult TaskAwaiter method
+            if (!identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.GetResultMethod))
+                return;
+
             var symbolInfo = context.SemanticModel.GetSymbolInfo(identifierNameSyntax, context.CancellationToken);
 
             var methodSymbol = symbolInfo.Symbol as IMethodSymbol;
