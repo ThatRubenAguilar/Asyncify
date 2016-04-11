@@ -46,8 +46,8 @@ namespace Asyncify.Test
         {
             var testExpression = @"(new AsyncMemberMethods()).Wait();";
 
-            var testTaskClass = String.Format(TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(new[] { testTaskClass, TaskStaticClass, TaskMemberClass, TaskChildClass });
+            var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
+            VerifyCSharpDiagnostic(new[] { testTaskClass, TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass });
         }
 
         [TestMethod, TestCategory("Remove.Task.Wait()")]
@@ -55,11 +55,11 @@ namespace Asyncify.Test
         {
             var testExpression = @"AsyncMethods.PerformProcessing().Wait();";
 
-            var testTaskClass = String.Format(TaskExpressionWrapper, testExpression);
+            var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
 
             var expected = AwaitTaskExpectedResult(testExpression, AsyncifyRules.AwaitTaskWaitRule, "Wait()", "AsyncMethods.PerformProcessing()");
 
-            VerifyCSharpDiagnostic(new[] { testTaskClass, TaskStaticClass, TaskMemberClass, TaskChildClass }, expected);
+            VerifyCSharpDiagnostic(new[] { testTaskClass, TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass }, expected);
         }
 
 
@@ -67,19 +67,19 @@ namespace Asyncify.Test
         public void Should_keep_trivia_in_remove_task_fix_on_generic_task_wait_method()
         {
             var testExpression = $@"
-        {FullTriviaText}
-        AsyncMethods.GetNumber({FullTriviaText}
-        ){FullTriviaText}.
-        {FullTriviaText}
-        Wait(){FullTriviaText};
-        {FullTriviaText}";
+        {TestSourceCode.FullTriviaText}
+        AsyncMethods.GetNumber({TestSourceCode.FullTriviaText}
+        ){TestSourceCode.FullTriviaText}.
+        {TestSourceCode.FullTriviaText}
+        Wait(){TestSourceCode.FullTriviaText};
+        {TestSourceCode.FullTriviaText}";
             var fixExpression = $@"
-        {FullTriviaText}
-        {FullTriviaText}
-        {FullTriviaText}
-        {FullTriviaText}
-        {FullTriviaText}
-        {FullTriviaText}";
+        {TestSourceCode.FullTriviaText}
+        {TestSourceCode.FullTriviaText}
+        {TestSourceCode.FullTriviaText}
+        {TestSourceCode.FullTriviaText}
+        {TestSourceCode.FullTriviaText}
+        {TestSourceCode.FullTriviaText}";
             
             var expected = RemoveTaskWaitMethodExpectedResult(testExpression, "AsyncMethods.GetNumber()");
 

@@ -51,8 +51,8 @@ AsyncMethods.PerformProcessing().Wait();";
         {
             var testExpression = @"(new AsyncMemberMethods()).Wait();";
 
-            var testTaskClass = String.Format(TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(new[] { testTaskClass, TaskStaticClass, TaskMemberClass, TaskChildClass });
+            var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
+            VerifyCSharpDiagnostic(new[] { testTaskClass, TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass });
         }
 
         [TestMethod, TestCategory("Await.Task.Wait()")]
@@ -60,11 +60,11 @@ AsyncMethods.PerformProcessing().Wait();";
         {
             var testExpression = @"AsyncMethods.GetNumber().Wait();";
 
-            var testTaskClass = String.Format(TaskExpressionWrapper, testExpression);
+            var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
 
             var expected = AwaitTaskExpectedResult(testExpression, AsyncifyRules.RemoveGenericTaskWaitRule, "Wait()", "AsyncMethods.GetNumber()");
 
-            VerifyCSharpDiagnostic(new[] { testTaskClass, TaskStaticClass, TaskMemberClass, TaskChildClass }, expected);
+            VerifyCSharpDiagnostic(new[] { testTaskClass, TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass }, expected);
         }
 
 
@@ -72,15 +72,15 @@ AsyncMethods.PerformProcessing().Wait();";
         public void Should_keep_trivia_in_await_task_fix_on_non_generic_task_wait_method()
         {
             var testExpression = $@"
-        {FullTriviaText}
-        AsyncMethods.PerformProcessing({FullTriviaText}
-        ){FullTriviaText}.{FullTriviaText}
-        Wait(){FullTriviaText}; {FullTriviaText}";
+        {TestSourceCode.FullTriviaText}
+        AsyncMethods.PerformProcessing({TestSourceCode.FullTriviaText}
+        ){TestSourceCode.FullTriviaText}.{TestSourceCode.FullTriviaText}
+        Wait(){TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
             var fixExpression = $@"
-        {FullTriviaText}
-        await AsyncMethods.PerformProcessing({FullTriviaText}
-        ){FullTriviaText}{FullTriviaText}
-        {FullTriviaText}; {FullTriviaText}";
+        {TestSourceCode.FullTriviaText}
+        await AsyncMethods.PerformProcessing({TestSourceCode.FullTriviaText}
+        ){TestSourceCode.FullTriviaText}{TestSourceCode.FullTriviaText}
+        {TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
             
             var expected = AwaitTaskWaitMethodExpectedResult(testExpression, "AsyncMethods.PerformProcessing()");
 

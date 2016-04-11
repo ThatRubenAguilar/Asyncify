@@ -37,7 +37,7 @@ namespace TestHelper
         /// <param name="language">The language the source classes are in</param>
         /// <param name="analyzer">The analyzer to be run on the sources</param>
         /// <returns>An IEnumerable of Diagnostics that surfaced in the source code, sorted by Location</returns>
-        private static Diagnostic[] GetSortedDiagnostics(string[] sources, string language, DiagnosticAnalyzer analyzer)
+        public static Diagnostic[] GetSortedDiagnostics(string[] sources, string language, DiagnosticAnalyzer analyzer)
         {
             return GetSortedDiagnosticsFromDocuments(analyzer, GetDocuments(sources, language));
         }
@@ -49,7 +49,7 @@ namespace TestHelper
         /// <param name="analyzer">The analyzer to run on the documents</param>
         /// <param name="documents">The Documents that the analyzer will be run on</param>
         /// <returns>An IEnumerable of Diagnostics that surfaced in the source code, sorted by Location</returns>
-        protected static Diagnostic[] GetSortedDiagnosticsFromDocuments(DiagnosticAnalyzer analyzer, Document[] documents)
+        public static Diagnostic[] GetSortedDiagnosticsFromDocuments(DiagnosticAnalyzer analyzer, Document[] documents)
         {
             var projects = new HashSet<Project>();
             foreach (var document in documents)
@@ -93,7 +93,7 @@ namespace TestHelper
         /// </summary>
         /// <param name="diagnostics">The list of Diagnostics to be sorted</param>
         /// <returns>An IEnumerable containing the Diagnostics in order of Location</returns>
-        private static Diagnostic[] SortDiagnostics(IEnumerable<Diagnostic> diagnostics)
+        public static Diagnostic[] SortDiagnostics(IEnumerable<Diagnostic> diagnostics)
         {
             return diagnostics.OrderBy(d => d.Location.SourceSpan.Start).ToArray();
         }
@@ -107,7 +107,7 @@ namespace TestHelper
         /// <param name="sources">Classes in the form of strings</param>
         /// <param name="language">The language the source code is in</param>
         /// <returns>A Tuple containing the Documents produced from the sources and their TextSpans if relevant</returns>
-        private static Document[] GetDocuments(string[] sources, string language)
+        public static Document[] GetDocuments(string[] sources, string language)
         {
             if (language != LanguageNames.CSharp && language != LanguageNames.VisualBasic)
             {
@@ -131,7 +131,7 @@ namespace TestHelper
         /// <param name="source">Classes in the form of a string</param>
         /// <param name="language">The language the source code is in</param>
         /// <returns>A Document created from the source string</returns>
-        protected static Document CreateDocument(string source, string language = LanguageNames.CSharp)
+        public static Document CreateDocument(string source, string language = LanguageNames.CSharp)
         {
             return CreateProject(new[] { source }, language).Documents.First();
         }
@@ -142,7 +142,7 @@ namespace TestHelper
         /// <param name="sources">Classes in the form of strings</param>
         /// <param name="language">The language the source code is in</param>
         /// <returns>A Document created from the source string</returns>
-        protected static Document[] CreateDocuments(string[] sources, string language = LanguageNames.CSharp)
+        public static Document[] CreateDocuments(string[] sources, string language = LanguageNames.CSharp)
         {
             return CreateProject(sources, language).Documents.ToArray();
         }
@@ -153,7 +153,7 @@ namespace TestHelper
         /// <param name="sources">Classes in the form of strings</param>
         /// <param name="language">The language the source code is in</param>
         /// <returns>A Project created out of the Documents created from the source strings</returns>
-        private static Project CreateProject(string[] sources, string language = LanguageNames.CSharp)
+        public static Project CreateProject(string[] sources, string language = LanguageNames.CSharp)
         {
             string fileNamePrefix = DefaultFilePathPrefix;
             string fileExt = language == LanguageNames.CSharp ? CSharpDefaultFileExt : VisualBasicDefaultExt;
@@ -186,7 +186,7 @@ namespace TestHelper
         }
         #endregion
 
-        static OptionSet GetTestingOptions(OptionSet workingOptions, string language)
+        public static OptionSet GetTestingOptions(OptionSet workingOptions, string language)
         {
             workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.IndentBlock, false);
             workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.IndentBraces, false);
