@@ -108,6 +108,11 @@ namespace Asyncify.Test
             return new TaskChild();
         }
         
+        public TaskChild<AsyncMemberMethods> GetMemberMethods()
+        {
+            return new TaskChild<AsyncMemberMethods>();
+        }
+        
         }
 ";
 
@@ -145,28 +150,52 @@ class Test
             VerifyCSharpDiagnostic(new[] {testTaskClass, TaskStaticClass, TaskMemberClass, TaskChildClass }, expected);
 
             var fixTaskClass = String.Format(TaskExpressionWrapper, fixedExpression);
-            VerifyCSharpFix(testTaskClass, fixTaskClass, new[] {TaskStaticClass, TaskMemberClass, TaskChildClass }, allowNewCompilerDiagnostics:allowNewCompilerDiagnostics);
+            VerifyCSharpFix(testTaskClass, fixTaskClass, new[] {TaskStaticClass, TaskMemberClass, TaskChildClass }, allowNewCompilerDiagnostics, expected);
+        }
+        protected void AwaitTaskDiagnosticsAndFix(string testExpression, DiagnosticResult[] expected,
+            string fixedExpression, bool allowNewCompilerDiagnostics = false)
+        {
+            var testTaskClass = String.Format(TaskExpressionWrapper, testExpression);
+            VerifyCSharpDiagnostic(new[] {testTaskClass, TaskStaticClass, TaskMemberClass, TaskChildClass }, expected);
+
+            var fixTaskClass = String.Format(TaskExpressionWrapper, fixedExpression);
+            VerifyCSharpFix(testTaskClass, fixTaskClass, new[] {TaskStaticClass, TaskMemberClass, TaskChildClass }, allowNewCompilerDiagnostics);
         }
 
 
-        protected DiagnosticResult AwaitTaskExpectedResult(string testExpression, string callerTaskExpression, string blockingCallCode, DiagnosticDescriptor rule)
+        protected DiagnosticResult AwaitTaskExpectedResult(string testExpression,
+            DiagnosticDescriptor rule, string blockingCallCode, string callerTaskExpression)
         {
-            var lineColOffset = testExpression.FindLineAndColOffset(blockingCallCode);
-            var lineLocation = TaskExpressionWrapperStartLine + lineColOffset.Item1;
-            var colLocation = TaskExpressionWrapperStartCol + lineColOffset.Item2;
-            var expected = new DiagnosticResult
+            return AwaitTaskExpectedResults(testExpression, rule, blockingCallCode, callerTaskExpression).Single();
+        }
+
+        protected IEnumerable<DiagnosticResult> AwaitTaskExpectedResults(string testExpression, DiagnosticDescriptor rule, string blockingCallCode, params string[] callerTaskExpressions)
+        {
+            var lineColOffsets = testExpression.FindLineAndColOffsets(blockingCallCode);
+            var lineColOffsetsEnum = lineColOffsets.GetEnumerator();
+            var callerTaskExprEnum = callerTaskExpressions.GetEnumerator();
+            while(lineColOffsetsEnum.MoveNext() && callerTaskExprEnum.MoveNext())
             {
-                Id = rule.Id,
-                Message = String.Format(rule.MessageFormat.ToString(),
-                    callerTaskExpression),
-                Severity = rule.DefaultSeverity,
-                Locations =
-                    new[]
-                    {
-                        new DiagnosticResultLocation("Test0.cs", lineLocation, colLocation)
-                    }
-            };
-            return expected;
+                var lineColOffset = lineColOffsetsEnum.Current;
+                var callerTaskExpression = callerTaskExprEnum.Current;
+
+                var lineLocation = TaskExpressionWrapperStartLine + lineColOffset.Item1;
+                var colLocation = TaskExpressionWrapperStartCol + lineColOffset.Item2;
+                var expected = new DiagnosticResult
+                {
+                    Id = rule.Id,
+                    Message = String.Format(rule.MessageFormat.ToString(),
+                        callerTaskExpression),
+                    Severity = rule.DefaultSeverity,
+                    Locations =
+                        new[]
+                        {
+                            new DiagnosticResultLocation("Test0.cs", lineLocation, colLocation)
+                        }
+                };
+                yield return expected;
+            }
+            yield break;
         }
 
     }

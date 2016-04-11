@@ -42,11 +42,11 @@ namespace TestHelper
         /// <param name="oldSource">A class in the form of a string before the CodeFix was applied to it</param>
         /// <param name="newSource">A class in the form of a string after the CodeFix was applied to it</param>
         /// <param name="supportingSources">Classes in the form of strings which support the oldSource</param>
-        /// <param name="codeFixIndex">Index determining which codefix to apply if there are multiple</param>
         /// <param name="allowNewCompilerDiagnostics">A bool controlling whether or not the test will fail if the CodeFix introduces other warnings after being applied</param>
-        protected void VerifyCSharpFix(string oldSource, string newSource, string[] supportingSources = null, int? codeFixIndex = null, bool allowNewCompilerDiagnostics = false)
+        /// <param name="fixSpecificResult">Specific result to fix, leaving the rest unfixed.</param>
+        protected void VerifyCSharpFix(string oldSource, string newSource, string[] supportingSources = null, bool allowNewCompilerDiagnostics = false, DiagnosticResult? fixSpecificResult = null)
         {
-            VerifyFix(LanguageNames.CSharp, GetCSharpDiagnosticAnalyzer(), GetCSharpCodeFixProvider(), oldSource, newSource, supportingSources, codeFixIndex, allowNewCompilerDiagnostics);
+            VerifyFix(LanguageNames.CSharp, GetCSharpDiagnosticAnalyzer(), GetCSharpCodeFixProvider(), oldSource, newSource, supportingSources, allowNewCompilerDiagnostics, fixSpecificResult);
         }
 
         /// <summary>
@@ -55,11 +55,11 @@ namespace TestHelper
         /// <param name="oldSource">A class in the form of a string before the CodeFix was applied to it</param>
         /// <param name="newSource">A class in the form of a string after the CodeFix was applied to it</param>
         /// <param name="supportingSources">Classes in the form of strings which support the oldSource</param>
-        /// <param name="codeFixIndex">Index determining which codefix to apply if there are multiple</param>
         /// <param name="allowNewCompilerDiagnostics">A bool controlling whether or not the test will fail if the CodeFix introduces other warnings after being applied</param>
-        protected void VerifyBasicFix(string oldSource, string newSource, string[] supportingSources = null, int? codeFixIndex = null, bool allowNewCompilerDiagnostics = false)
+        /// <param name="fixSpecificResult">Specific result to fix, leaving the rest unfixed.</param>
+        protected void VerifyBasicFix(string oldSource, string newSource, string[] supportingSources = null, bool allowNewCompilerDiagnostics = false, DiagnosticResult? fixSpecificResult = null)
         {
-            VerifyFix(LanguageNames.VisualBasic, GetBasicDiagnosticAnalyzer(), GetBasicCodeFixProvider(), oldSource, newSource, supportingSources, codeFixIndex, allowNewCompilerDiagnostics);
+            VerifyFix(LanguageNames.VisualBasic, GetBasicDiagnosticAnalyzer(), GetBasicCodeFixProvider(), oldSource, newSource, supportingSources, allowNewCompilerDiagnostics, fixSpecificResult);
         }
 
         /// <summary>
@@ -74,9 +74,9 @@ namespace TestHelper
         /// <param name="oldSource">A class in the form of a string before the CodeFix was applied to it</param>
         /// <param name="newSource">A class in the form of a string after the CodeFix was applied to it</param>
         /// <param name="supportingSources">Classes in the form of strings which support the oldSource</param>
-        /// <param name="codeFixIndex">Index determining which codefix to apply if there are multiple</param>
         /// <param name="allowNewCompilerDiagnostics">A bool controlling whether or not the test will fail if the CodeFix introduces other warnings after being applied</param>
-        private void VerifyFix(string language, DiagnosticAnalyzer analyzer, CodeFixProvider codeFixProvider, string oldSource, string newSource, string[] supportingSources, int? codeFixIndex, bool allowNewCompilerDiagnostics)
+        /// <param name="fixSpecificResult">Specific result to fix, leaving the rest unfixed.</param>
+        private void VerifyFix(string language, DiagnosticAnalyzer analyzer, CodeFixProvider codeFixProvider, string oldSource, string newSource, string[] supportingSources, bool allowNewCompilerDiagnostics, DiagnosticResult? fixSpecificResult = null)
         {
             var allOldSources = new List<string>();
             allOldSources.Add(oldSource);
@@ -90,21 +90,28 @@ namespace TestHelper
 
             for (int i = 0; i < attempts; ++i)
             {
+                Diagnostic applyDiagnostic = null;
+                foreach (var analyzerDiagnostic in analyzerDiagnostics)
+                {
+                    if (fixSpecificResult == null || fixSpecificResult.Value.Equals(analyzerDiagnostic))
+                    {
+                        applyDiagnostic = analyzerDiagnostic;
+                        break;
+                    }
+                }
+
+                if (applyDiagnostic == null)
+                    break;
+
                 var actions = new List<CodeAction>();
-                var context = new CodeFixContext(document, analyzerDiagnostics[0], (a, d) => actions.Add(a), CancellationToken.None);
+                var context = new CodeFixContext(document, applyDiagnostic, (a, d) => actions.Add(a), CancellationToken.None);
                 codeFixProvider.RegisterCodeFixesAsync(context).Wait();
 
                 if (!actions.Any())
                 {
                     break;
                 }
-
-                if (codeFixIndex != null)
-                {
-                    document = ApplyFix(document, actions.ElementAt((int)codeFixIndex));
-                    break;
-                }
-
+                
                 document = ApplyFix(document, actions.ElementAt(0));
                 analyzerDiagnostics = GetSortedDiagnosticsFromDocuments(analyzer, new[] { document });
 

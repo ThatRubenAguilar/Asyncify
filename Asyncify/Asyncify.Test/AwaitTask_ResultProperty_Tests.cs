@@ -1,6 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Asyncify.Analyzers;
 using Asyncify.FixProviders;
 using Asyncify.Test.Extensions;
@@ -14,7 +16,11 @@ namespace Asyncify.Test
 
         private DiagnosticResult AwaitTaskResultPropertyExpectedResult(string testExpression, string callerTaskExpression)
         {
-            return AwaitTaskExpectedResult(testExpression, callerTaskExpression, "Result", AsyncifyRules.AwaitTaskResultRule);
+            return AwaitTaskExpectedResult(testExpression, AsyncifyRules.AwaitTaskResultRule, "Result", callerTaskExpression);
+        }
+        private IEnumerable<DiagnosticResult> AwaitTaskResultPropertyExpectedResults(string testExpression, params string[] callerTaskExpressions)
+        {
+            return AwaitTaskExpectedResults(testExpression, AsyncifyRules.AwaitTaskResultRule, "Result", callerTaskExpressions);
         }
 
         [TestMethod, TestCategory("Await.Task.Result")]
@@ -32,6 +38,21 @@ namespace Asyncify.Test
             var expected = AwaitTaskResultPropertyExpectedResult(testExpression, "AsyncMethods.GetNumber()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
+        }
+
+
+        [TestMethod, TestCategory("Await.Task.Result")]
+        public void Should_await_correct_task_fix_on_nested_generic_task_result_property()
+        {
+            var testExpression = @"var val = AsyncMethods.GetMemberMethods().Result.GetNumber().Result.ToString();";
+            var fixOuterExpression = @"var val = (await AsyncMethods.GetMemberMethods().Result.GetNumber()).ToString();";
+            var fixInnerExpression = @"var val = (await AsyncMethods.GetMemberMethods()).GetNumber().Result.ToString();";
+            var fixBothExpression = @"var val = (await (await AsyncMethods.GetMemberMethods()).GetNumber()).ToString();";
+            var expected = AwaitTaskResultPropertyExpectedResults(testExpression, "AsyncMethods.GetMemberMethods()", "AsyncMethods.GetMemberMethods().Result.GetNumber()").ToArray();
+
+            AwaitTaskDiagnosticsAndFix(testExpression, expected, fixBothExpression);
+            AwaitTaskDiagnosticAndFix(testExpression, expected.First(), fixInnerExpression, true);
+            AwaitTaskDiagnosticAndFix(testExpression, expected.Last(), fixOuterExpression, true);
         }
 
         [TestMethod, TestCategory("Await.Task.Result")]

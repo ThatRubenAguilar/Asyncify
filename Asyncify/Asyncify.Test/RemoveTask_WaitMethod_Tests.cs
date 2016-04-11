@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Asyncify.Analyzers;
 using Asyncify.FixProviders;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -13,7 +14,11 @@ namespace Asyncify.Test
     {
         private DiagnosticResult RemoveTaskWaitMethodExpectedResult(string testExpression, string callerTaskExpression)
         {
-            return AwaitTaskExpectedResult(testExpression, callerTaskExpression, "Wait()", AsyncifyRules.RemoveGenericTaskWaitRule);
+            return AwaitTaskExpectedResult(testExpression, AsyncifyRules.RemoveGenericTaskWaitRule, "Wait()", callerTaskExpression);
+        }
+        private IEnumerable<DiagnosticResult> RemoveTaskWaitMethodExpectedResults(string testExpression, params string[] callerTaskExpressions)
+        {
+            return AwaitTaskExpectedResults(testExpression, AsyncifyRules.RemoveGenericTaskWaitRule, "Wait()", callerTaskExpressions);
         }
 
 
@@ -52,7 +57,7 @@ namespace Asyncify.Test
 
             var testTaskClass = String.Format(TaskExpressionWrapper, testExpression);
 
-            var expected = AwaitTaskExpectedResult(testExpression, "AsyncMethods.PerformProcessing()", "Wait()", AsyncifyRules.AwaitTaskWaitRule);
+            var expected = AwaitTaskExpectedResult(testExpression, AsyncifyRules.AwaitTaskWaitRule, "Wait()", "AsyncMethods.PerformProcessing()");
 
             VerifyCSharpDiagnostic(new[] { testTaskClass, TaskStaticClass, TaskMemberClass, TaskChildClass }, expected);
         }
