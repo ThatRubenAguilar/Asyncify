@@ -1,43 +1,36 @@
 ﻿using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
+using Microsoft.CodeAnalysis.Text;
 
 namespace TestHelper
 {
     /// <summary>
     /// Location where the diagnostic appears, as determined by path, line number, and column number.
     /// </summary>
-    public struct DiagnosticResultLocation : IEquatable<DiagnosticResultLocation>, IEquatable<Location>
+    public class DiagnosticResultLocation : ResultLocation, IEquatable<DiagnosticResultLocation>, IEquatable<Location>
     {
         
 
-        public DiagnosticResultLocation(string path, int line, int column)
+        public DiagnosticResultLocation(string path, int line, int column, int start, int length) :
+            base(line, column, start, length)
         {
-            if (line < -1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(line), "line must be >= -1");
-            }
-
-            if (column < -1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(column), "column must be >= -1");
-            }
-
             this.Path = path;
-            this.Line = line;
-            this.Column = column;
         }
-
+        public DiagnosticResultLocation(string path, ResultLocation location) :
+            base(location.Line, location.Column, location.Span)
+        {
+            this.Path = path;
+        }
+        
         public string Path { get; }
-        public int Line { get; }
-        public int Column { get; }
 
         public bool Equals(DiagnosticResultLocation other)
         {
-            return string.Equals(Path, other.Path) && Line == other.Line && Column == other.Column;
+            return string.Equals(Path, other.Path) && base.Equals(other);
         }
 
-        public bool Equals(Location other)
+        public new bool Equals(Location other)
         {
             if (other == null)
                 return false;
@@ -47,17 +40,7 @@ namespace TestHelper
             if (actualSpan.Path != Path)
                 return false;
 
-            var actualLinePosition = actualSpan.StartLinePosition;
-
-            // Only check line position if there is an actual line in the real diagnostic
-            if (actualLinePosition.Line > 0 && actualLinePosition.Line + 1 != Line)
-                return false;
-
-            // Only check column position if there is an actual column position in the real diagnostic
-            if (actualLinePosition.Character > 0 && actualLinePosition.Character + 1 != Column)
-                return false;
-
-            return true;
+            return base.Equals(other);
         }
 
         public override bool Equals(object obj)
@@ -71,8 +54,7 @@ namespace TestHelper
             unchecked
             {
                 var hashCode = (Path != null ? Path.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Line;
-                hashCode = (hashCode*397) ^ Column;
+                hashCode = (hashCode*397) ^ base.GetHashCode();
                 return hashCode;
             }
         }

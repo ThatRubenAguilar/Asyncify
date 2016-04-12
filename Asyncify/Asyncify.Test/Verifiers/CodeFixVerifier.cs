@@ -143,8 +143,8 @@ namespace TestHelper
             var mismatchIndex = DiffersAtIndex(newSource, actual);
             if (mismatchIndex != -1)
             {
-                var lineColOffset = newSource.FindLineAndColOffset(mismatchIndex);
-                Assert.AreEqual(newSource, actual, $"Sources differ at line {lineColOffset.Item1} and column {lineColOffset.Item2}");
+                var lineColOffset = newSource.FindSourceLocation(mismatchIndex);
+                Assert.AreEqual(newSource, actual, $"Sources differ at line {lineColOffset.Line} and column {lineColOffset.Column}");
             }
             else
                 Assert.AreEqual(newSource, actual); // Fallback in case DifferAtIndex fails.

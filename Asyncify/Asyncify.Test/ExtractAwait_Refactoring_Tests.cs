@@ -1,5 +1,6 @@
 using Asyncify.RefactorProviders;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestHelper;
 
 namespace Asyncify.Test
 {
@@ -12,7 +13,7 @@ namespace Asyncify.Test
         public void Should_have_no_change_for_empty_code()
         {
             var test = @"";
-            AwaitTaskRefactoring(test, test);
+            AwaitTaskRefactoring(test, null, test);
         }
 
         [TestMethod, TestCategory("Extract_Await")]
@@ -25,15 +26,16 @@ namespace Asyncify.Test
 ";
             var fixExpression = @"
 {
-    AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
-    var t = (taskResult).Field1;
+        AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
+        var t = (taskResult).Field1;
 }
 ";
-            AwaitTaskRefactoring(testExpression, fixExpression);
+            var expected = ExpectedResultLocation(testExpression, "await");
+            AwaitTaskRefactoring(testExpression, expected, fixExpression);
         }
 
         /*
-        TODO: seems we need to pass the specific span it would find, means we need to pass the source to start with, use resultLocation and search like with diags
+        TODO: 
         see how it handles types that are not included in the namespace.
         lambda block
         lambda single line

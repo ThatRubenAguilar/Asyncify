@@ -108,6 +108,8 @@
     <Compile Include="AwaitTask_WaitMethod_Tests.cs" />
     <Compile Include="Extensions\SourceCodeTextExtensions.cs" />
     <Compile Include="ExtractAwait_Refactoring_Tests.cs" />
+    <Compile Include="FindSourceLocation_Tests.cs" />
+    <Compile Include="Helpers\ResultLocation.cs" />
     <Compile Include="Helpers\TestSourceCode.cs" />
     <Compile Include="RemoveTask_WaitMethod_Tests.cs" />
     <Compile Include="Verifiers\CodeFixVerifier.cs" />

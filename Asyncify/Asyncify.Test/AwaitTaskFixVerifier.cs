@@ -53,7 +53,7 @@ namespace Asyncify.Test
 
         protected IEnumerable<DiagnosticResult> AwaitTaskExpectedResults(string testExpression, DiagnosticDescriptor rule, string blockingCallCode, params string[] callerTaskExpressions)
         {
-            var lineColOffsets = testExpression.FindLineAndColOffsets(blockingCallCode);
+            var lineColOffsets = testExpression.FindSourceLocations(blockingCallCode);
             var lineColOffsetsEnum = lineColOffsets.GetEnumerator();
             var callerTaskExprEnum = callerTaskExpressions.GetEnumerator();
             while(lineColOffsetsEnum.MoveNext() && callerTaskExprEnum.MoveNext())
@@ -61,8 +61,7 @@ namespace Asyncify.Test
                 var lineColOffset = lineColOffsetsEnum.Current;
                 var callerTaskExpression = callerTaskExprEnum.Current;
 
-                var lineLocation = TestSourceCode.TaskExpressionWrapperStartLine + lineColOffset.Item1;
-                var colLocation = TestSourceCode.TaskExpressionWrapperStartCol + lineColOffset.Item2;
+                var absoluteLocation = TestSourceCode.TaskExpressionWrapperLocation.Add(lineColOffset);
                 var expected = new DiagnosticResult
                 {
                     Id = rule.Id,
@@ -72,7 +71,7 @@ namespace Asyncify.Test
                     Locations =
                         new[]
                         {
-                            new DiagnosticResultLocation("Test0.cs", lineLocation, colLocation)
+                            new DiagnosticResultLocation("Test0.cs", absoluteLocation)
                         }
                 };
                 yield return expected;

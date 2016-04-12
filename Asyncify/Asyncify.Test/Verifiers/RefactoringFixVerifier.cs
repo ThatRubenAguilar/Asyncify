@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestHelper
@@ -27,9 +28,9 @@ namespace TestHelper
         /// <param name="newSource">A class in the form of a string after the CodeFix was applied to it</param>
         /// <param name="supportingSources">Classes in the form of strings which support the oldSource</param>
         /// <param name="allowNewCompilerDiagnostics">A bool controlling whether or not the test will fail if the CodeFix introduces other warnings after being applied</param>
-        protected void VerifyCSharpRefactoring(string oldSource, string newSource, string[] supportingSources = null, bool allowNewCompilerDiagnostics = false)
+        protected void VerifyCSharpRefactoring(string oldSource, ResultLocation expected, string newSource, string[] supportingSources = null, bool allowNewCompilerDiagnostics = false)
         {
-            VerifyRefactoring(LanguageNames.CSharp, GetCSharpRefactoringProvider(), oldSource, newSource, supportingSources, allowNewCompilerDiagnostics);
+            VerifyRefactoring(LanguageNames.CSharp, GetCSharpRefactoringProvider(), oldSource, expected, newSource, supportingSources, allowNewCompilerDiagnostics);
         }
 
         /// <summary>
@@ -44,7 +45,7 @@ namespace TestHelper
         /// <param name="newSource">A class in the form of a string after the CodeFix was applied to it</param>
         /// <param name="supportingSources">Classes in the form of strings which support the oldSource</param>
         /// <param name="allowNewCompilerDiagnostics">A bool controlling whether or not the test will fail if the CodeFix introduces other warnings after being applied</param>
-        private void VerifyRefactoring(string language, CodeRefactoringProvider refactoringProvider, string oldSource, string newSource, string[] supportingSources, bool allowNewCompilerDiagnostics)
+        private void VerifyRefactoring(string language, CodeRefactoringProvider refactoringProvider, string oldSource, ResultLocation expected, string newSource, string[] supportingSources, bool allowNewCompilerDiagnostics)
         {
             var allOldSources = new List<string>();
             allOldSources.Add(oldSource);
@@ -56,8 +57,11 @@ namespace TestHelper
             
             var actions = new List<CodeAction>();
 
-            var rootSpan = document.GetSyntaxRootAsync().Result.FullSpan;
-            var context = new CodeRefactoringContext(document, rootSpan, (a) => actions.Add(a), CancellationToken.None);
+            TextSpan? fullSpan = expected?.Span;
+            if (expected == null)
+                fullSpan = document.GetSyntaxRootAsync().Result.FullSpan;
+
+            var context = new CodeRefactoringContext(document, fullSpan.Value, (a) => actions.Add(a), CancellationToken.None);
 
             refactoringProvider.ComputeRefactoringsAsync(context).Wait();
 
@@ -90,8 +94,8 @@ namespace TestHelper
             var mismatchIndex = CodeFixVerifier.DiffersAtIndex(newSource, actual);
             if (mismatchIndex != -1)
             {
-                var lineColOffset = newSource.FindLineAndColOffset(mismatchIndex);
-                Assert.AreEqual(newSource, actual, $"Sources differ at line {lineColOffset.Item1} and column {lineColOffset.Item2}");
+                var lineColOffset = newSource.FindSourceLocation(mismatchIndex);
+                Assert.AreEqual(newSource, actual, $"Sources differ at line {lineColOffset.Line} and column {lineColOffset.Column}");
             }
             else
                 Assert.AreEqual(newSource, actual); // Fallback in case DifferAtIndex fails.
