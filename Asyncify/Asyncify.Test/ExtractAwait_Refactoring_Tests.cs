@@ -59,15 +59,27 @@ namespace Asyncify.Test
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_extract_await_in_commented_block_code_for_generic_task()
         {
+//            var testExpression = $@"
+//{{
+//    var t = ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
+//}}
+//";
             var testExpression = $@"
 {{
-    var t = ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
+    var t = ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods()).Field1;
 }}
 ";
+//            var fixExpression = $@"
+//{{
+//        AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText};
+//        var t = ({TestSourceCode.FullTriviaText}taskResult){TestSourceCode.FullTriviaText}.Field1;
+//}}
+//";
             var fixExpression = $@"
 {{
-        AsyncMemberMethods taskResult = {TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText};
-        var t = (taskResult){TestSourceCode.FullTriviaText}.Field1;
+        AsyncMemberMethods taskResult =
+{TestSourceCode.TriviaTextCorrected()}await AsyncMethods.GetMemberMethods();
+        var t = (taskResult).Field1;
 }}
 ";
             var expected = ExpectedResultLocation(testExpression, "await");

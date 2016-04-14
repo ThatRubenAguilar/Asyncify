@@ -280,12 +280,13 @@ namespace Asyncify.Extensions
         /// </summary>
         /// <param name="node">node to search in</param>
         /// <param name="stopToken">token to stop at</param>
+        /// <param name="considerTrivia">Whether to consider trivia as tokens</param>
         /// <returns></returns>
-        public static SyntaxToken GetTokenBeforeOrDefault(this SyntaxNode node, SyntaxToken stopToken)
+        public static SyntaxToken GetTokenBeforeOrDefault(this SyntaxNode node, SyntaxToken stopToken, bool considerTrivia = false)
         {
             SyntaxToken followToken = default(SyntaxToken);
 
-            foreach (var token in node.DescendantTokens(descendIntoTrivia:true))
+            foreach (var token in node.DescendantTokens(descendIntoTrivia:considerTrivia))
             {
                 if (token.Equals(stopToken))
                     break;
@@ -293,6 +294,26 @@ namespace Asyncify.Extensions
             }
 
             return followToken;
+        }
+        /// <summary>
+        /// Gets the token that is after stopToken or the default.
+        /// </summary>
+        /// <param name="node">node to search in</param>
+        /// <param name="stopToken">token to stop at</param>
+        /// <param name="considerTrivia">Whether to consider trivia as tokens</param>
+        /// <returns></returns>
+        public static SyntaxToken GetTokenAfterOrDefault(this SyntaxNode node, SyntaxToken stopToken, bool considerTrivia = false)
+        {
+            SyntaxToken followToken = default(SyntaxToken);
+
+            foreach (var token in node.DescendantTokens(descendIntoTrivia:considerTrivia))
+            {
+                if (followToken.Equals(stopToken))
+                    return token;
+                followToken = token;
+            }
+
+            return default(SyntaxToken);
         }
 
         /// <summary>
@@ -314,6 +335,26 @@ namespace Asyncify.Extensions
             }
 
             return followToken;
+        }
+        /// <summary>
+        /// Gets the token that is after stopNode's last token or the default.
+        /// </summary>
+        /// <param name="node">node to search in</param>
+        /// <param name="stopNode">node whose last token to stop at</param>
+        /// <returns></returns>
+        public static SyntaxToken GetTokenAfterOrDefault(this SyntaxNode node, SyntaxNode stopNode)
+        {
+            SyntaxToken followToken = default(SyntaxToken);
+            var stopToken = stopNode.GetLastToken(true, true, true, true);
+
+            foreach (var token in node.DescendantTokens(descendIntoTrivia:true))
+            {
+                if (followToken.Equals(stopToken))
+                    return token;
+                followToken = token;
+            }
+
+            return default(SyntaxToken);
         }
     }
 }

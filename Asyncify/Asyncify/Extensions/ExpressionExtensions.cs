@@ -105,15 +105,17 @@ namespace Asyncify.Extensions
         /// <param name="semanticModel">Semantic model of the expression</param>
         /// <param name="variableType">Type of the extracted variable</param>
         /// <param name="varName">Name of the variable</param>
+        /// <param name="mergeSurroundingTrivia">Merge edge trivia from parent of expression into the variable declaration</param>
         /// <returns>Local declaration statement syntax with extracted expression.</returns>
-        public static LocalDeclarationStatementSyntax ExtractToLocalVariable(this ExpressionSyntax expr, SemanticModel semanticModel, ITypeSymbol variableType, string varName)
+        public static LocalDeclarationStatementSyntax ExtractToLocalVariable(this ExpressionSyntax expr, SemanticModel semanticModel, ITypeSymbol variableType, string varName, bool mergeSurroundingTrivia = false)
         {
             var minimalTypeString = variableType.ToMinimalDisplayString(semanticModel,
                 expr.SpanStart);
 
             // Create full local declaration by moving the expression
+            var equalsExpression = mergeSurroundingTrivia ? expr.MergeSurroundingTrivia() : expr;
             var varTypeDeclaration = SyntaxFactory.IdentifierName(minimalTypeString);
-            var varEqualsClause = SyntaxFactory.EqualsValueClause(expr);
+            var varEqualsClause = SyntaxFactory.EqualsValueClause(equalsExpression);
             var varIdentifier = SyntaxFactory.Identifier(varName);
             var varDeclarator = SyntaxFactory.VariableDeclarator(varIdentifier, null, varEqualsClause);
 
@@ -137,21 +139,60 @@ namespace Asyncify.Extensions
         /// <param name="awaitContainingExpr">Expression which fully contains the await expression, used to position the insert for the local variable declaration</param>
         /// <param name="awaitedType">Unwrapped type returned by the await expression</param>
         /// <param name="varName">Name of the local variable</param>
+        /// <param name="mergeTriviaSurroundingAwait">Whether to merge in trivia around the await expression or not</param>
         /// <returns>New modified root after extraction</returns>
-        public static SyntaxNode ExtractAwaitExpressionToVariable(this AwaitExpressionSyntax awaitExpr, SyntaxEditor syntaxEditor, SemanticModel semanticModel, SyntaxNode awaitContainingExpr, ITypeSymbol awaitedType, string varName)
+        public static SyntaxNode ExtractAwaitExpressionToVariable(this AwaitExpressionSyntax awaitExpr, SyntaxEditor syntaxEditor, SemanticModel semanticModel, SyntaxNode awaitContainingExpr, ITypeSymbol awaitedType, string varName, bool mergeTriviaSurroundingAwait = false)
         {
 
-            LocalDeclarationStatementSyntax extractedAwaitDeclaration = awaitExpr.ExtractToLocalVariable(semanticModel, awaitedType, varName);
+            LocalDeclarationStatementSyntax extractedAwaitDeclaration = awaitExpr.ExtractToLocalVariable(semanticModel, awaitedType, varName, mergeTriviaSurroundingAwait);
 
             syntaxEditor.InsertBefore(awaitContainingExpr, extractedAwaitDeclaration);
 
             // Replace the old await expression with the new local variable
             var awaitVarIdentifierName = SyntaxFactory.IdentifierName(varName);
 
-            syntaxEditor.ReplaceNode(awaitExpr, awaitVarIdentifierName);
+            if (mergeTriviaSurroundingAwait)
+            {
+                // TODO: Need to remove paren tokens' trivia and do the same in single line lambda
+                // try using .WithAdditionalAnnotations(Formatter.Annotation) and see if it can solve the random formatting crap
+            }
+            else
+            {
+                syntaxEditor.ReplaceNode(awaitExpr, awaitVarIdentifierName);
+            }
 
             var newRoot = syntaxEditor.GetChangedRoot();
             return newRoot;
+        }
+
+        /// <summary>
+        /// Merges trivia surrounding the expression into the expression.
+        /// </summary>
+        /// <param name="expr"></param>
+        /// <returns></returns>
+        public static ExpressionSyntax MergeSurroundingTrivia(this ExpressionSyntax expr)
+        {
+            var firstInsideToken = expr.DescendantTokens().FirstOrDefault();
+            var lastInsideToken = expr.DescendantTokens().LastOrDefault();
+            if (firstInsideToken.IsDefault() || lastInsideToken.IsDefault())
+                throw new ArgumentException($"Expression has no tokens to merge trivia into.");
+
+            var parentNode = expr.Parent;
+            var beforeFirstInsideToken = parentNode.GetTokenBeforeOrDefault(firstInsideToken);
+            var afterLastInsideToken = parentNode.GetTokenAfterOrDefault(lastInsideToken);
+
+            ExpressionSyntax returnExpression = expr;
+            if (!beforeFirstInsideToken.IsDefault())
+            {
+                var mergedLeadingTrivia = beforeFirstInsideToken.GetMergedTrailingTrivia(firstInsideToken);
+                returnExpression = returnExpression.WithLeadingTrivia(mergedLeadingTrivia);
+            }
+            if (!afterLastInsideToken.IsDefault())
+            {
+                var mergedTrailingTrivia = afterLastInsideToken.GetMergedLeadingTrivia(lastInsideToken);
+                returnExpression = returnExpression.WithTrailingTrivia(mergedTrailingTrivia);
+            }
+            return returnExpression;
         }
     }
 }

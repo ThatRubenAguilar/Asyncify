@@ -1,26 +1,64 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Asyncify.Test.Extensions;
 
 namespace TestHelper
 {
     public static class TestSourceCode
     {
+        const int DefaultIndentSpaces = 8;
+        const int DefaultCorrectedSpaces = 0;
 
-        // NOTE: Indent code using this to 2 tabs or face the wrath of the whitespace formatter
-        public static readonly string FullTriviaText = @"// One Line Comment 
+
+        static readonly string FullTriviaTextTemplate = @"// One Line Comment 
 #if Directive
-        /* Comment If */
+{0}/* Comment If */
 #else
-        /* Comment Else */
+{1}/* Comment Else */
 #endif
-        /*
-        Multi Line Comment 
-        */
-        #region Region
-        #endregion
+{1}/*
+{1}Multi Line Comment 
+{1}*/
+{0}#region Region
+{0}#endregion
 ";
+
+        /// <summary>
+        /// Creates trivia text which is indented existingSpaces amount and will be indented to correctedSpaces amount in case of running formatter.
+        /// </summary>
+        /// <param name="existingSpaces"></param>
+        /// <param name="correctedSpaces"></param>
+        /// <returns></returns>
+        public static string TriviaTextCorrected(int existingSpaces = DefaultIndentSpaces, int correctedSpaces = DefaultCorrectedSpaces)
+        {
+            var existingSpacesBuilder = new StringBuilder();
+            for (int i = 0; i < existingSpaces; i++)
+            {
+                existingSpacesBuilder.Append(" ");
+            }
+            var correctedSpacesBuilder = new StringBuilder();
+            for (int i = 0; i < correctedSpaces; i++)
+            {
+                correctedSpacesBuilder.Append(" ");
+            }
+            return String.Format(FullTriviaTextTemplate, existingSpacesBuilder, correctedSpacesBuilder);
+        }
+
+        /// <summary>
+        /// Creates trivia text which is indented existingSpaces amount
+        /// </summary>
+        /// <param name="existingSpaces"></param>
+        /// <returns></returns>
+        public static string TriviaText(int existingSpaces = DefaultIndentSpaces)
+        {
+            return TriviaTextCorrected(existingSpaces, existingSpaces);
+        }
+
+        // NOTE: Indent code using this to 2 tabs (4 spaces each) or face the wrath of the whitespace formatter
+        public static readonly string FullTriviaText = TriviaText();
+
         public static readonly string TaskChildClass = @"
     using System;
     using System.Threading.Tasks;

@@ -98,7 +98,7 @@ namespace Asyncify.RefactorProviders
 
             var defaultVarName = awaitExpr.GenerateDefaultUnusedLocalVariableName("taskResult", semanticModel);
             
-            LocalDeclarationStatementSyntax extractedAwaitDeclaration = awaitExpr.ExtractToLocalVariable(semanticModel, awaitedType, defaultVarName);
+            LocalDeclarationStatementSyntax extractedAwaitDeclaration = awaitExpr.ExtractToLocalVariable(semanticModel, awaitedType, defaultVarName, true);
             
             // Replace the old await expression with the new local variable
             var awaitVarIdentifierName = SyntaxFactory.IdentifierName(defaultVarName);
@@ -126,7 +126,7 @@ namespace Asyncify.RefactorProviders
         private async Task<Document> ExtractAwaitToVariableFromBlock(SyntaxNode root, Document document, AwaitExpressionSyntax awaitExpr, BlockSyntax containingSyntax, CancellationToken cancellationToken)
         {
             // Block logic: find smallest symbol in children containing the original await and move it up with a variable addition.
-
+            
             var syntaxEditor = new SyntaxEditor(root, document.Project.Solution.Workspace);
 
             var containingExpr = containingSyntax.ChildNodes().FirstOrDefault(n => n.Contains(awaitExpr));
@@ -147,7 +147,7 @@ namespace Asyncify.RefactorProviders
             var defaultVarName = awaitExpr.GenerateDefaultUnusedLocalVariableName("taskResult", semanticModel);
 
             var newRoot = awaitExpr.ExtractAwaitExpressionToVariable(syntaxEditor, semanticModel, containingExpr,
-                awaitedType, defaultVarName);
+                awaitedType, defaultVarName, true);
             // Replace the old node
             var newDocument = document.WithSyntaxRoot(newRoot);
             return newDocument;
