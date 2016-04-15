@@ -256,6 +256,7 @@ return (taskResult).Field1;
 
         /*
         TODO: 
+                // try using .WithAdditionalAnnotations(Formatter.Annotation) and see if it can solve the random formatting crap
         see how it handles types that are not included in the namespace.
         Fix comment handling
     */

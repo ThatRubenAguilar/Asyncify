@@ -154,7 +154,7 @@ namespace Asyncify.Extensions
             if (mergeTriviaSurroundingAwait)
             {
                 // TODO: Need to remove paren tokens' trivia and do the same in single line lambda
-                // try using .WithAdditionalAnnotations(Formatter.Annotation) and see if it can solve the random formatting crap
+                // write the merging logic as a syntax rewriter
             }
             else
             {
