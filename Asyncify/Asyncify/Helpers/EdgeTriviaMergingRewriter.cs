@@ -6,7 +6,11 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Asyncify.Helpers
 {
-    class TriviaMergingRewriter : CSharpSyntaxRewriter
+
+    /// <summary>
+    /// Rewriter which merges trivia on the edge of innerExpression. One time use rewriter. Multiple calls to Visit(node) will result in failure.
+    /// </summary>
+    class EdgeTriviaMergingRewriter : CSharpSyntaxRewriter
     {
         private readonly SyntaxNode _outerExpression;
         private readonly SyntaxToken _firstToken;
@@ -17,14 +21,16 @@ namespace Asyncify.Helpers
         private bool _mergeLast = false;
         private bool _touchedFirst = false;
         private bool _touchedLast = false;
+        private bool _checkedOnce = false;
+        private SyntaxNode _entryNode;
 
-        public TriviaMergingRewriter(SyntaxNode innerExpression) 
+        public EdgeTriviaMergingRewriter(SyntaxNode innerExpression) 
             : this(innerExpression, innerExpression.Parent)
         {
         
         }
 
-        public TriviaMergingRewriter(SyntaxNode innerExpression, SyntaxNode outerExpression)
+        public EdgeTriviaMergingRewriter(SyntaxNode innerExpression, SyntaxNode outerExpression)
         {
             _outerExpression = outerExpression;
             _firstToken = innerExpression.DescendantTokens().FirstOrDefault();
@@ -38,21 +44,15 @@ namespace Asyncify.Helpers
 
         public override SyntaxNode Visit(SyntaxNode node)
         {
-            if (!_outerExpression.Contains(node))
-                throw new ArgumentException($"{nameof(node)}: '{node.ToStringWithoutTrivia()}' is not contained by expression '{_outerExpression.ToStringWithoutTrivia()}' given to rewriter.");
-            _mergeFirst = false;
-            _mergeLast = false;
-            _touchedFirst = false;
-            _touchedLast = false;
-            var processedNode = base.Visit(node);
-            // Verify preconditions of node being within outerExpression passed to ctor
-            if (!_touchedFirst && !_touchedLast)
-                throw new ArgumentException($"{nameof(node)}: '{node.ToStringWithoutTrivia()}' had no nodes touched by rewriter.");
-            else if (!_touchedFirst)
-                throw new ArgumentException($"{nameof(node)}: '{node.ToStringWithoutTrivia()}' had only first nodes touched by rewriter.");
-            else if (!_touchedLast)
-                throw new ArgumentException($"{nameof(node)}: '{node.ToStringWithoutTrivia()}' had only last nodes touched by rewriter.");
-            return processedNode;
+            if (!_checkedOnce && !_outerExpression.Contains(node))
+                throw new ArgumentException(
+                    $"{nameof(node)}: '{node.ToStringWithoutTrivia()}' is not contained by expression '{_outerExpression.ToStringWithoutTrivia()}' given to rewriter.");
+            else
+            {
+                _checkedOnce = true;
+                _entryNode = node;
+            }
+            return base.Visit(node);
         }
 
         public override SyntaxToken VisitToken(SyntaxToken token)
@@ -88,6 +88,17 @@ namespace Asyncify.Helpers
             }
 
             return token;
+        }
+
+        public void EnsureNodesTouched()
+        {
+            // Verify preconditions of node being within outerExpression passed to ctor
+            if (!_touchedFirst && !_touchedLast)
+                throw new ArgumentException($"{nameof(_entryNode)}: '{_entryNode?.ToStringWithoutTrivia()}' had no nodes touched by rewriter.");
+            else if (!_touchedFirst)
+                throw new ArgumentException($"{nameof(_entryNode)}: '{_entryNode?.ToStringWithoutTrivia()}' had only first nodes touched by rewriter.");
+            else if (!_touchedLast)
+                throw new ArgumentException($"{nameof(_entryNode)}: '{_entryNode?.ToStringWithoutTrivia()}' had only last nodes touched by rewriter.");
         }
     }
 }

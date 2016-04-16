@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Asyncify.Extensions;
+using Asyncify.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
@@ -145,8 +146,17 @@ namespace Asyncify.RefactorProviders
                 return document;
 
             var defaultVarName = awaitExpr.GenerateDefaultUnusedLocalVariableName("taskResult", semanticModel);
+            
+            // TODO: Now we're back to working off a different tree which is causing replacement problems
+            var triviaMergedAwaitExprParent = awaitExpr.MergeEdgeTrivia();
 
-            var newRoot = awaitExpr.ExtractAwaitExpressionToVariable(syntaxEditor, semanticModel, containingExpr,
+            var triviaMergedAwaitExpr =
+                triviaMergedAwaitExprParent.DescendantNodes().OfType<AwaitExpressionSyntax>().FirstOrDefault();
+
+            if (triviaMergedAwaitExpr == null)
+                return document;
+
+            var newRoot = triviaMergedAwaitExpr.ExtractAwaitExpressionToVariable(syntaxEditor, semanticModel, containingExpr,
                 awaitedType, defaultVarName, true);
             // Replace the old node
             var newDocument = document.WithSyntaxRoot(newRoot);

@@ -166,7 +166,7 @@ namespace Asyncify.Extensions
         }
 
         /// <summary>
-        /// Merges trivia surrounding the expression into the expression.
+        /// Merges trivia surrounding the expression into the expression. This only returns the inner expression so attempts to directly replace will have dangling trivia on the outer expression.
         /// </summary>
         /// <param name="expr"></param>
         /// <returns></returns>

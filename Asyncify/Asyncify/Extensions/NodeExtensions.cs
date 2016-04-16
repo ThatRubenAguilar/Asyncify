@@ -356,5 +356,28 @@ namespace Asyncify.Extensions
 
             return default(SyntaxToken);
         }
+
+        /// <summary>
+        /// Merges the trivia on the edge of innerNode contained within outerNode fully into innerNode
+        /// </summary>
+        /// <param name="innerNode">node to merge trivia into</param>
+        /// <param name="outerNode">node which contains innedNode</param>
+        /// <returns>outerNode with trivia fully merged into innerNode</returns>
+        public static SyntaxNode MergeEdgeTrivia(this SyntaxNode innerNode, SyntaxNode outerNode)
+        {
+            var rewriter = new EdgeTriviaMergingRewriter(innerNode, outerNode);
+            var mergedTriviaNode = rewriter.Visit(outerNode);
+            rewriter.EnsureNodesTouched();
+            return mergedTriviaNode;
+        }
+        /// <summary>
+        /// Merges the trivia on the edge of innerNode contained within innerNode.Parent fully into innerNode
+        /// </summary>
+        /// <param name="innerNode">node to merge trivia into</param>
+        /// <returns>innerNode.Parent with trivia fully merged into innerNode</returns>
+        public static SyntaxNode MergeEdgeTrivia(this SyntaxNode innerNode)
+        {
+            return innerNode.MergeEdgeTrivia(innerNode.Parent);
+        }
     }
 }
