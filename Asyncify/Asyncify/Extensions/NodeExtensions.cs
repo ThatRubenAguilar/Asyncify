@@ -363,8 +363,9 @@ namespace Asyncify.Extensions
         /// <param name="innerNode">node to merge trivia into</param>
         /// <param name="outerNode">node which contains innedNode</param>
         /// <returns>outerNode with trivia fully merged into innerNode</returns>
-        public static SyntaxNode MergeEdgeTrivia(this SyntaxNode innerNode, SyntaxNode outerNode)
+        public static SyntaxNode MergeEdgeTriviaIn(this SyntaxNode innerNode, SyntaxNode outerNode)
         {
+            // TODO: Improve this with merge in/out option
             var rewriter = new EdgeTriviaMergingRewriter(innerNode, outerNode);
             var mergedTriviaNode = rewriter.Visit(outerNode);
             rewriter.EnsureNodesTouched();
@@ -375,9 +376,32 @@ namespace Asyncify.Extensions
         /// </summary>
         /// <param name="innerNode">node to merge trivia into</param>
         /// <returns>innerNode.Parent with trivia fully merged into innerNode</returns>
-        public static SyntaxNode MergeEdgeTrivia(this SyntaxNode innerNode)
+        public static SyntaxNode MergeEdgeTriviaIn(this SyntaxNode innerNode)
         {
-            return innerNode.MergeEdgeTrivia(innerNode.Parent);
+            return innerNode.MergeEdgeTriviaIn(innerNode.Parent);
+        }
+
+        public static int GetChildIndex(this SyntaxNode node, SyntaxNode searchNode)
+        {
+            return node.ChildNodes().TakeWhile(n => !n.Equals(searchNode) && !n.Contains(searchNode)).Count();
+        }
+        public static int GetDescendantIndex(this SyntaxNode node, SyntaxNode searchNode)
+        {
+            return node.DescendantNodes().TakeWhile(n => !n.Equals(searchNode)).Count();
+        }
+
+        public static T GetChildNodeAtIndex<T>(this SyntaxNode node, int index) where T : SyntaxNode
+        {
+            return node.ChildNodes().ElementAt(index) as T;
+        }  
+        public static T GetDescendantNodeAtIndex<T>(this SyntaxNode node, int index) where T : SyntaxNode
+        {
+            return node.DescendantNodes().ElementAt(index) as T;
+        }
+
+        public static LambdaExpressionSyntax FindContainingLambda(this SyntaxNode node)
+        {
+            return node.AncestorsAndSelf().OfType<LambdaExpressionSyntax>().FirstOrDefault();
         }
     }
 }

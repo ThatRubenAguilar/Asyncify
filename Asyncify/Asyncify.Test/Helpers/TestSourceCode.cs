@@ -8,8 +8,8 @@ namespace TestHelper
 {
     public static class TestSourceCode
     {
-        const int DefaultIndentSpaces = 8;
-        const int DefaultCorrectedSpaces = 0;
+        public const int DefaultIndentSpaces = 8;
+        public const int DefaultCorrectedSpaces = 0;
 
 
         static readonly string FullTriviaTextTemplate = @"// One Line Comment 
@@ -18,11 +18,11 @@ namespace TestHelper
 #else
 {1}/* Comment Else */
 #endif
-{1}/*
-{1}Multi Line Comment 
-{1}*/
-{0}#region Region
-{0}#endregion
+{2}/*
+{2}Multi Line Comment 
+{2}*/
+{3}#region Region
+{3}#endregion
 ";
 
         /// <summary>
@@ -33,17 +33,22 @@ namespace TestHelper
         /// <returns></returns>
         public static string TriviaTextCorrected(int existingSpaces = DefaultIndentSpaces, int correctedSpaces = DefaultCorrectedSpaces)
         {
-            var existingSpacesBuilder = new StringBuilder();
-            for (int i = 0; i < existingSpaces; i++)
+            return TriviaTextCustom(existingSpaces, correctedSpaces, correctedSpaces, existingSpaces);
+        }
+
+        public static string TriviaTextCustom(int ifDirectiveSpaces=0, int elseDirectiveSpaces=0, int multilineCommentSpaces=0, int regionSpaces=0)
+        {
+            return String.Format(FullTriviaTextTemplate, CreateSpaces(ifDirectiveSpaces), CreateSpaces(elseDirectiveSpaces), CreateSpaces(multilineCommentSpaces), CreateSpaces(regionSpaces));
+        }
+
+        private static string CreateSpaces(int numSpaces)
+        {
+            var spacesBuilder = new StringBuilder();
+            for (int i = 0; i < numSpaces; i++)
             {
-                existingSpacesBuilder.Append(" ");
+                spacesBuilder.Append(" ");
             }
-            var correctedSpacesBuilder = new StringBuilder();
-            for (int i = 0; i < correctedSpaces; i++)
-            {
-                correctedSpacesBuilder.Append(" ");
-            }
-            return String.Format(FullTriviaTextTemplate, existingSpacesBuilder, correctedSpacesBuilder);
+            return spacesBuilder.ToString();
         }
 
         /// <summary>
@@ -53,7 +58,7 @@ namespace TestHelper
         /// <returns></returns>
         public static string TriviaText(int existingSpaces = DefaultIndentSpaces)
         {
-            return TriviaTextCorrected(existingSpaces, existingSpaces);
+            return TriviaTextCustom(existingSpaces, existingSpaces, existingSpaces, existingSpaces);
         }
 
         // NOTE: Indent code using this to 2 tabs (4 spaces each) or face the wrath of the whitespace formatter

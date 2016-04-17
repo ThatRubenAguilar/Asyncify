@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -102,19 +103,15 @@ namespace Asyncify.Extensions
         /// Extracts out an expression to a local variable declaration
         /// </summary>
         /// <param name="expr">Expression to extract</param>
-        /// <param name="semanticModel">Semantic model of the expression</param>
-        /// <param name="variableType">Type of the extracted variable</param>
+        /// <param name="varTypeDeclaration">Name of the type of variable to extract to</param>
         /// <param name="varName">Name of the variable</param>
-        /// <param name="mergeSurroundingTrivia">Merge edge trivia from parent of expression into the variable declaration</param>
         /// <returns>Local declaration statement syntax with extracted expression.</returns>
-        public static LocalDeclarationStatementSyntax ExtractToLocalVariable(this ExpressionSyntax expr, SemanticModel semanticModel, ITypeSymbol variableType, string varName, bool mergeSurroundingTrivia = false)
+        public static LocalDeclarationStatementSyntax ExtractToLocalVariable(this ExpressionSyntax expr, IdentifierNameSyntax varTypeDeclaration, string varName)
         {
-            var minimalTypeString = variableType.ToMinimalDisplayString(semanticModel,
-                expr.SpanStart);
 
             // Create full local declaration by moving the expression
-            var equalsExpression = mergeSurroundingTrivia ? expr.MergeSurroundingTrivia() : expr;
-            var varTypeDeclaration = SyntaxFactory.IdentifierName(minimalTypeString);
+            var equalsExpression = expr;
+            
             var varEqualsClause = SyntaxFactory.EqualsValueClause(equalsExpression);
             var varIdentifier = SyntaxFactory.Identifier(varName);
             var varDeclarator = SyntaxFactory.VariableDeclarator(varIdentifier, null, varEqualsClause);
@@ -135,64 +132,88 @@ namespace Asyncify.Extensions
         /// </summary>
         /// <param name="awaitExpr">Await expression to extract</param>
         /// <param name="syntaxEditor">Editor to use</param>
-        /// <param name="semanticModel">Semantic model of the await expression tree</param>
         /// <param name="awaitContainingExpr">Expression which fully contains the await expression, used to position the insert for the local variable declaration</param>
-        /// <param name="awaitedType">Unwrapped type returned by the await expression</param>
+        /// <param name="varTypeDeclaration">Name of the type of variable to extract to</param>
         /// <param name="varName">Name of the local variable</param>
-        /// <param name="mergeTriviaSurroundingAwait">Whether to merge in trivia around the await expression or not</param>
         /// <returns>New modified root after extraction</returns>
-        public static SyntaxNode ExtractAwaitExpressionToVariable(this AwaitExpressionSyntax awaitExpr, SyntaxEditor syntaxEditor, SemanticModel semanticModel, SyntaxNode awaitContainingExpr, ITypeSymbol awaitedType, string varName, bool mergeTriviaSurroundingAwait = false)
+        public static SyntaxNode ExtractAwaitExpressionToVariable(this AwaitExpressionSyntax awaitExpr, SyntaxEditor syntaxEditor, SyntaxNode awaitContainingExpr, IdentifierNameSyntax varTypeDeclaration, string varName)
         {
 
-            LocalDeclarationStatementSyntax extractedAwaitDeclaration = awaitExpr.ExtractToLocalVariable(semanticModel, awaitedType, varName, mergeTriviaSurroundingAwait);
+            LocalDeclarationStatementSyntax extractedAwaitDeclaration = awaitExpr.ExtractToLocalVariable(varTypeDeclaration, varName);
 
             syntaxEditor.InsertBefore(awaitContainingExpr, extractedAwaitDeclaration);
 
             // Replace the old await expression with the new local variable
             var awaitVarIdentifierName = SyntaxFactory.IdentifierName(varName);
-
-            if (mergeTriviaSurroundingAwait)
-            {
-                // TODO: Need to remove paren tokens' trivia and do the same in single line lambda
-                // write the merging logic as a syntax rewriter
-            }
-            else
-            {
-                syntaxEditor.ReplaceNode(awaitExpr, awaitVarIdentifierName);
-            }
-
+            
+            syntaxEditor.ReplaceNode(awaitExpr, awaitVarIdentifierName);
+            
             var newRoot = syntaxEditor.GetChangedRoot();
             return newRoot;
         }
 
         /// <summary>
-        /// Merges trivia surrounding the expression into the expression. This only returns the inner expression so attempts to directly replace will have dangling trivia on the outer expression.
+        /// Converts a single line lambda expression to block syntax. Is a no op if it is already block lambda.
         /// </summary>
-        /// <param name="expr"></param>
-        /// <returns></returns>
-        public static ExpressionSyntax MergeSurroundingTrivia(this ExpressionSyntax expr)
+        /// <param name="lambda">Single line lambda to transform.</param>
+        /// <param name="semanticModel">semantic model to inspect the lambda method with</param>
+        /// <param name="workspace">workspace of the document lambda is in</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Block lambda expression</returns>
+        public static LambdaExpressionSyntax ToBlockLambda(this LambdaExpressionSyntax lambda, SemanticModel semanticModel, Workspace workspace, CancellationToken cancellationToken)
         {
-            var firstInsideToken = expr.DescendantTokens().FirstOrDefault();
-            var lastInsideToken = expr.DescendantTokens().LastOrDefault();
-            if (firstInsideToken.IsDefault() || lastInsideToken.IsDefault())
-                throw new ArgumentException($"Expression has no tokens to merge trivia into.");
+            var lambdaBody = lambda.ChildNodes().OfType<ExpressionSyntax>().LastOrDefault();
+            // not a single line lambda
+            if (lambdaBody == null) 
+                return lambda;
 
-            var parentNode = expr.Parent;
-            var beforeFirstInsideToken = parentNode.GetTokenBeforeOrDefault(firstInsideToken);
-            var afterLastInsideToken = parentNode.GetTokenAfterOrDefault(lastInsideToken);
+            var lambdaInfo = semanticModel.GetSymbolInfo(lambda, cancellationToken);
+            var lambdaSymbol = lambdaInfo.Symbol as IMethodSymbol;
 
-            ExpressionSyntax returnExpression = expr;
-            if (!beforeFirstInsideToken.IsDefault())
+            if (lambdaSymbol == null)
+                return null;
+
+            var lambdaEditor = new SyntaxEditor(lambda, workspace);
+            StatementSyntax transformedExpression;
+            if (lambdaSymbol.ReturnsVoid)
             {
-                var mergedLeadingTrivia = beforeFirstInsideToken.GetMergedTrailingTrivia(firstInsideToken);
-                returnExpression = returnExpression.WithLeadingTrivia(mergedLeadingTrivia);
+                transformedExpression = SyntaxFactory.ExpressionStatement(lambdaBody);
             }
-            if (!afterLastInsideToken.IsDefault())
+            else
             {
-                var mergedTrailingTrivia = afterLastInsideToken.GetMergedLeadingTrivia(lastInsideToken);
-                returnExpression = returnExpression.WithTrailingTrivia(mergedTrailingTrivia);
+                transformedExpression = SyntaxFactory.ReturnStatement(lambdaBody);
             }
-            return returnExpression;
+            var blockBody = SyntaxFactory.Block(transformedExpression);
+            lambdaEditor.ReplaceNode(lambdaBody, blockBody);
+            return lambdaEditor.GetChangedRoot() as LambdaExpressionSyntax;
+        }
+
+        public static bool IsBlockLambda(this LambdaExpressionSyntax lambda)
+        {
+            var lambdaBody = lambda.ChildNodes().OfType<BlockSyntax>().FirstOrDefault();
+            return lambdaBody != null;
+        }
+
+        public static SyntaxNode GetLambdaBody(this LambdaExpressionSyntax lambda)
+        {
+            return lambda.ChildNodes().FirstOrDefault(n => n is BlockSyntax || n is ExpressionSyntax);
+        }
+
+        public static LambdaBodyInfo GetLambdaBodyInfo(this LambdaExpressionSyntax lambda)
+        {
+            var lambdaBody = lambda.GetLambdaBody();
+            if (lambdaBody == null)
+                return null;
+
+            var blockBody = lambdaBody as BlockSyntax;
+            if (blockBody != null)
+                return new LambdaBodyInfo(blockBody, lambda);
+
+            var expressionBody = lambdaBody as ExpressionSyntax;
+            if (expressionBody != null)
+                return new LambdaBodyInfo(expressionBody, lambda);
+
+            return null;
         }
     }
 }

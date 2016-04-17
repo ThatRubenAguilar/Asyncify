@@ -112,5 +112,48 @@ c";
                 Assert.AreEqual(answers[i], result);
             }
         }
+
+        [TestMethod, TestCategory("TestHelpers")]
+        public void Should_get_correct_line()
+        {
+            var testExpression = @"a
+b
+c";
+            
+            var find = new[] {1, 2, 3};
+            var answers = new[]
+            {
+                "a", "b", "c"
+            };
+            for (int i = 0; i < find.Length; i++)
+            {
+                var result = testExpression.GetLine(find[i]);
+                Assert.AreEqual(answers[i], result);
+            }
+        }
+        [TestMethod, TestCategory("TestHelpers")]
+        public void Should_throw_for_out_of_range_line()
+        {
+            var testExpression = @"a
+b
+c";
+            
+            Throws<ArgumentOutOfRangeException>(() => testExpression.GetLine(4));
+            Throws<ArgumentOutOfRangeException>(() => testExpression.GetLine(-1));
+            Throws<ArgumentOutOfRangeException>(() => testExpression.GetLine(0));
+        }
+
+        void Throws<T>(Action func)
+            where T : Exception
+        {
+            try
+            {
+                func();
+            }
+            catch (Exception e)
+            {
+                Assert.AreEqual(typeof(T), e.GetType());
+            }
+        }
     }
 }

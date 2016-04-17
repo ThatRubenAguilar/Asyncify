@@ -8,6 +8,8 @@ namespace Asyncify.Test.Extensions
 {
     public static class SourceCodeTextExtensions
     {
+        private static readonly char[] NewLineCharArray = Environment.NewLine.ToCharArray();
+
         /// <summary>
         /// Finds one source location of the expectedSyntax. Errors on more than 1 found.
         /// </summary>
@@ -78,6 +80,36 @@ namespace Asyncify.Test.Extensions
         }
 
         /// <summary>
+        /// Gets the text of the line
+        /// </summary>
+        public static string GetLine(this string source, int line)
+        {
+            var zeroAlignedLine = line - 1;
+            var allLineEndings = source.FindNewLineEndingLocations();
+            var allLineEndEnum = allLineEndings.GetEnumerator();
+            int count = 0;
+            while (count < zeroAlignedLine && allLineEndEnum.MoveNext())
+            {
+                count++;
+            }
+            if (count < zeroAlignedLine)
+                throw new ArgumentOutOfRangeException(nameof(line), $"{nameof(source)} has {allLineEndings.Count} lines, attempted to access {line} line.");
+
+            int startIndex;
+            if (count != 0)
+                startIndex = allLineEndEnum.Current + 1; // Newline ending will include 1 char of the newline char array
+            else
+                startIndex = 0;
+            int endIndex;
+            if (allLineEndEnum.MoveNext())
+                endIndex = allLineEndEnum.Current - (NewLineCharArray.Length - 1); // Newline ending will include the n-1 rest of the newline char array
+            else
+                endIndex = source.Length;
+            
+            return source.Substring(startIndex, (endIndex - startIndex));
+        }
+
+        /// <summary>
         /// Finds all the ending indices of a newline within a string
         /// </summary>
         /// <param name="input">string to find newlines in</param>
@@ -92,17 +124,16 @@ namespace Asyncify.Test.Extensions
 
         private static IList<int> FineNewLineEndlingLocationsUntilIndex(string input, int stopIndex)
         {
-            var newLineCharArray = Environment.NewLine.ToCharArray();
             var newLineLocationList = new List<int>();
-            if (newLineCharArray.Length > 1)
+            if (NewLineCharArray.Length > 1)
             {
                 int matchIndex = 0;
                 for (int i = 0; i < input.Length && i <= stopIndex; i++)
                 {
-                    if (input[i] == newLineCharArray[matchIndex])
+                    if (input[i] == NewLineCharArray[matchIndex])
                     {
                         matchIndex++;
-                        if (matchIndex >= newLineCharArray.Length)
+                        if (matchIndex >= NewLineCharArray.Length)
                         {
                             matchIndex = 0;
                             newLineLocationList.Add(i);
@@ -116,7 +147,7 @@ namespace Asyncify.Test.Extensions
             }
             else
             {
-                var singleNewLineChar = newLineCharArray[0];
+                var singleNewLineChar = NewLineCharArray[0];
                 for (int i = 0; i < input.Length && i <= stopIndex; i++)
                 {
                     if (input[i] == singleNewLineChar)
@@ -127,17 +158,16 @@ namespace Asyncify.Test.Extensions
         }
         private static IList<int> FineAllNewLineEndlingLocations(string input)
         {
-            var newLineCharArray = Environment.NewLine.ToCharArray();
             var newLineLocationList = new List<int>();
-            if (newLineCharArray.Length > 1)
+            if (NewLineCharArray.Length > 1)
             {
                 int matchIndex = 0;
                 for (int i = 0; i < input.Length; i++)
                 {
-                    if (input[i] == newLineCharArray[matchIndex])
+                    if (input[i] == NewLineCharArray[matchIndex])
                     {
                         matchIndex++;
-                        if (matchIndex >= newLineCharArray.Length)
+                        if (matchIndex >= NewLineCharArray.Length)
                         {
                             matchIndex = 0;
                             newLineLocationList.Add(i);
@@ -151,7 +181,7 @@ namespace Asyncify.Test.Extensions
             }
             else
             {
-                var singleNewLineChar = newLineCharArray[0];
+                var singleNewLineChar = NewLineCharArray[0];
                 for (int i = 0; i < input.Length; i++)
                 {
                     if (input[i] == singleNewLineChar)
