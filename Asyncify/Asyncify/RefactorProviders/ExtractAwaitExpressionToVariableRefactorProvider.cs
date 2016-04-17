@@ -3,6 +3,7 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Asyncify.Contexts;
 using Asyncify.Extensions;
 using Asyncify.Helpers;
 using Microsoft.CodeAnalysis;
@@ -52,7 +53,15 @@ namespace Asyncify.RefactorProviders
             if (containingSyntax is BlockSyntax || containingSyntax is LambdaExpressionSyntax)
             {
                 // Something is using a nested await expression, offer to extract it.
-                var action = CodeAction.Create(title, c => ExtractSemanticInfoForAwaitToVariable(root, context.Document, awaitExpr, containingSyntax, c));
+                var action = CodeAction.Create(title, c =>
+                {
+                    var refactorContext = new ExtractAwaitContext(new DocumentContext(root, context.Document, c))
+                    {
+                        OriginalContainingBodySyntax = containingSyntax,
+                        TargetAwaitExpression = awaitExpr
+                    };
+                    return ExtractSemanticInfoForAwaitToVariable(refactorContext);
+                });
 
                 context.RegisterRefactoring(action);
             }
@@ -61,101 +70,89 @@ namespace Asyncify.RefactorProviders
         /// <summary>
         /// Extracts semantic information from original tree to avoid reparsing.
         /// </summary>
-        /// <param name="awaitExpr">await expression targetted by refactoring for extract</param>
-        /// <param name="originalContainingSyntax">syntax which contains the await expression</param>
         /// <returns></returns>
-        private async Task<Document> ExtractSemanticInfoForAwaitToVariable(SyntaxNode root, Document document, AwaitExpressionSyntax awaitExpr, SyntaxNode originalContainingSyntax, CancellationToken cancellationToken)
+        private async Task<Document> ExtractSemanticInfoForAwaitToVariable(ExtractAwaitContext context)
         {
-            var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+            var semanticModel = await context.DocumentContext.GetSemanticModel().ConfigureAwait(false);
             
             // Get type returned by await expression
-            var awaitedType = awaitExpr.GetAwaitedType(semanticModel);
+            var awaitedType = context.TargetAwaitExpression.GetAwaitedType(semanticModel);
 
             // This refactoring should only be picked up by nested calls which should only be possible on generic tasks, but avoid crashes anyway
             if (awaitedType == null)
-                return document;
+                return context.DocumentContext.Document;
             // Semantic evaluations come first as doing them off the modified tree requires a recompile of the document.
-            var defaultVarName = awaitExpr.GenerateDefaultUnusedLocalVariableName("taskResult", semanticModel);
-
-            var minimalTypeString = awaitedType.ToMinimalDisplayString(semanticModel,
-                awaitExpr.SpanStart);
-            var varTypeDeclaration = SyntaxFactory.IdentifierName(minimalTypeString);
-
-
-            var containingLambda = originalContainingSyntax.FindContainingLambda();
+            context.SemanticContext = VariableSemanticContext.CreateForLocalVariable(context.TargetAwaitExpression, awaitedType, "taskResult", semanticModel);
+             
+            var containingLambda = context.OriginalContainingBodySyntax.FindContainingLambda();
             // is single line lambda
-            if (containingLambda != null && containingLambda.Equals(originalContainingSyntax))
+            if (containingLambda != null && containingLambda.Equals(context.OriginalContainingBodySyntax))
             {
-                return TransformExpressionLambdaForAwaitToVariable(root, document, awaitExpr, containingLambda, semanticModel, varTypeDeclaration, defaultVarName, cancellationToken);
+                context.ContainingBodySyntax = containingLambda;
+                return TransformExpressionLambdaForAwaitToVariable(context);
             }
 
-            return ExtractAwaitToVariable(root, document, originalContainingSyntax, originalContainingSyntax, awaitExpr, varTypeDeclaration, defaultVarName);
+            context.ContainingBodySyntax = context.OriginalContainingBodySyntax;
+            return ExtractAwaitToVariable(context);
         }
+
 
         /// <summary>
         /// Transforms an expression lambda into a block lambda.
         /// </summary>
-        /// <param name="awaitExpr">await expression targetted by refactoring for extract</param>
-        /// <param name="containingLambda">lambda expression node that contains the await expression</param>
-        /// <param name="semanticModel">semantic model of the original syntax tree</param>
-        /// <param name="varTypeDeclaration">variable type node that is the return type of the awaited expression</param>
-        /// <param name="defaultVarName">variable name for the extracted await expression</param>
         /// <returns></returns>
-        private static Document TransformExpressionLambdaForAwaitToVariable(SyntaxNode root, Document document,
-            AwaitExpressionSyntax awaitExpr, LambdaExpressionSyntax containingLambda, SemanticModel semanticModel,
-            IdentifierNameSyntax varTypeDeclaration, string defaultVarName, CancellationToken cancellationToken)
+        private static Document TransformExpressionLambdaForAwaitToVariable(ExtractAwaitContext context)
         {
+            var containingLambda = context.ContainingBodySyntax as LambdaExpressionSyntax;
+            if (containingLambda == null)
+                return context.DocumentContext.Document;
             // Single Line Lambda Logic: transform to block lambda then process.
             var originalLambdaBody = containingLambda.GetLambdaBody();
             if (originalLambdaBody == null)
-                return document;
+                return context.DocumentContext.Document;
 
-            var blockLambda = containingLambda.ToBlockLambda(semanticModel,
-                document.Project.Solution.Workspace,
-                cancellationToken);
+            var blockLambda = containingLambda.ToBlockLambda(context.SemanticContext.Model,
+                context.DocumentContext.Workspace,
+                context.DocumentContext.Token);
 
             if (blockLambda == null)
-                return document;
+                return context.DocumentContext.Document;
 
             var blockSyntax = blockLambda.ChildNodes().OfType<BlockSyntax>().LastOrDefault();
             if (blockSyntax == null)
-                return document;
+                return context.DocumentContext.Document;
 
             var blockAwaitExpr =
                 blockSyntax.DescendantNodes().OfType<AwaitExpressionSyntax>()
                     .FirstOrDefault(
-                        n => n.ToStringWithoutTrivia().Equals(awaitExpr.ToStringWithoutTrivia()));
+                        n => n.ToStringWithoutTrivia().Equals(context.TargetAwaitExpression.ToStringWithoutTrivia()));
 
             if (blockAwaitExpr == null)
-                return document;
+                return context.DocumentContext.Document;
 
-            return ExtractAwaitToVariable(root, document, originalLambdaBody, blockSyntax, blockAwaitExpr, varTypeDeclaration,
-                defaultVarName);
+            context.OriginalContainingBodySyntax = originalLambdaBody;
+            context.ContainingBodySyntax = blockSyntax;
+            context.TargetAwaitExpression = blockAwaitExpr;
+
+            return ExtractAwaitToVariable(context);
         }
 
         /// <summary>
         /// Merges trivia and extracts the await expression to own variable within a block body.
         /// </summary>
-        /// <param name="originalContainingBodySyntax">original block body to replace</param>
-        /// <param name="containingSyntax">block syntax which contains the await expression</param>
-        /// <param name="awaitExpr">await expression targetted by refactoring for extract</param>
-        /// <param name="varTypeDeclaration">variable type node that is the return type of the awaited expression</param>
-        /// <param name="extractVarName">variable name for the extracted await expression</param>
         /// <returns></returns>
-        private static Document ExtractAwaitToVariable(SyntaxNode root, Document document, 
-            SyntaxNode originalContainingBodySyntax, SyntaxNode containingSyntax, AwaitExpressionSyntax awaitExpr,
-            IdentifierNameSyntax varTypeDeclaration, string extractVarName)
+        private static Document ExtractAwaitToVariable(ExtractAwaitContext context)
         {
             // Merge trivia into expression to be extracted.
-            var awaitIndex = containingSyntax.GetDescendantIndex(awaitExpr);
+            var awaitIndex = context.ContainingBodySyntax.GetDescendantIndex(context.TargetAwaitExpression);
 
-            var triviaMergedContainingSyntax = awaitExpr.MergeEdgeTriviaIn(containingSyntax);
+            var triviaMergedContainingSyntax = context.TargetAwaitExpression.MergeEdgeTriviaIn(context.ContainingBodySyntax);
 
             var triviaMergedAwaitExpr =
                 triviaMergedContainingSyntax.GetDescendantNodeAtIndex<AwaitExpressionSyntax>(awaitIndex);
 
             if (triviaMergedAwaitExpr == null)
-                return document;
+                return context.DocumentContext.Document;
 
 
             // Block logic: find smallest symbol in children containing the original await and move it up with a variable addition.
@@ -165,18 +162,40 @@ namespace Asyncify.RefactorProviders
 
             // Houdini await expression somehow disappeared, but lets not crash
             if (containingExpr == null)
-                return document;
+                return context.DocumentContext.Document;
             
-            var blockSyntaxEditor = new SyntaxEditor(triviaMergedContainingSyntax, document.Project.Solution.Workspace);
+            var blockSyntaxEditor = new SyntaxEditor(triviaMergedContainingSyntax, context.DocumentContext.Workspace);
             var newBlock = triviaMergedAwaitExpr.ExtractAwaitExpressionToVariable(blockSyntaxEditor,
-                containingExpr, varTypeDeclaration, extractVarName);
+                containingExpr, context.SemanticContext);
 
-            var syntaxEditor = new SyntaxEditor(root, document.Project.Solution.Workspace);
-            syntaxEditor.ReplaceNode(originalContainingBodySyntax, newBlock);
+            var syntaxEditor = context.DocumentContext.CreateSyntaxEditor();
+            syntaxEditor.ReplaceNode(context.OriginalContainingBodySyntax, newBlock);
             var newRoot = syntaxEditor.GetChangedRoot();
             // Replace the old node
-            var newDocument = document.WithSyntaxRoot(newRoot);
+            var newDocument = context.DocumentContext.Document.WithSyntaxRoot(newRoot);
             return newDocument;
         }
+
+        class ExtractAwaitContext : RefactoringContext<DocumentContext, VariableSemanticContext>
+        {
+            public ExtractAwaitContext(DocumentContext documentContext) : base(documentContext, null)
+            {
+            }
+
+            /// <summary>
+            /// Original body node which is to be replaced by the refactored node.
+            /// </summary>
+            public SyntaxNode OriginalContainingBodySyntax { get; set; }
+            /// <summary>
+            /// Block body which contains the TargetAwaitExpression
+            /// </summary>
+            public SyntaxNode ContainingBodySyntax { get; set; }
+            /// <summary>
+            /// Await expression targetted for refactoring.
+            /// </summary>
+            public AwaitExpressionSyntax TargetAwaitExpression { get; set; }
+        }
+
+
     }
 }

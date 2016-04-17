@@ -37,6 +37,10 @@
     <Compile Include="AsyncifyDiagnosticIds.cs" />
     <Compile Include="AsyncifyResources.cs" />
     <Compile Include="AsyncifyRules.cs" />
+    <Compile Include="Contexts\DocumentContext.cs" />
+    <Compile Include="Contexts\RefactoringContext.cs" />
+    <Compile Include="Contexts\SemanticContext.cs" />
+    <Compile Include="Contexts\VariableSemanticContext.cs" />
     <Compile Include="Extensions\ContextExtensions.cs" />
     <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Extensions\LambdaBodyInfo.cs" />
@@ -48,7 +52,6 @@
     <Compile Include="FixProviders\ConsiderAwaitOverBlockingTaskWaitCodeFixProvider.cs" />
     <Compile Include="FixProviders\ConsiderRemovingBlockingGenericTaskWaitCodeFixProvider.cs" />
     <Compile Include="Helpers\SyntaxFactoryHelper.cs" />
-    <Compile Include="Helpers\EdgeTriviaMergingRewriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RefactorProviders\ExtractAwaitExpressionToVariableRefactorProvider.cs" />
     <Compile Include="Resources.Designer.cs">
@@ -56,6 +59,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Rewriters\EdgeTriviaMergingRewriter.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">

@@ -4,9 +4,8 @@ using Asyncify.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace Asyncify.Helpers
+namespace Asyncify.Rewriters
 {
-
     /// <summary>
     /// Rewriter which merges trivia on the edge of innerExpression. One time use rewriter. Multiple calls to Visit(node) will result in failure.
     /// </summary>

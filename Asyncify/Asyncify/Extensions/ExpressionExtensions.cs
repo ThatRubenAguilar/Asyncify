@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using Asyncify.Contexts;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -104,17 +105,18 @@ namespace Asyncify.Extensions
         /// </summary>
         /// <param name="expr">Expression to extract</param>
         /// <param name="varTypeDeclaration">Name of the type of variable to extract to</param>
-        /// <param name="varName">Name of the variable</param>
+        /// <param name="varNameToken">Name of the variable</param>
         /// <returns>Local declaration statement syntax with extracted expression.</returns>
-        public static LocalDeclarationStatementSyntax ExtractToLocalVariable(this ExpressionSyntax expr, IdentifierNameSyntax varTypeDeclaration, string varName)
+        public static LocalDeclarationStatementSyntax ExtractToLocalVariable(this ExpressionSyntax expr, IdentifierNameSyntax varTypeDeclaration, SyntaxToken varNameToken)
         {
+            if (!varNameToken.IsKind(SyntaxKind.IdentifierToken))
+                throw new ArgumentException($"{nameof(varNameToken)} is expected to be {SyntaxKind.IdentifierToken} but was {varNameToken.Kind()}");
 
             // Create full local declaration by moving the expression
             var equalsExpression = expr;
             
             var varEqualsClause = SyntaxFactory.EqualsValueClause(equalsExpression);
-            var varIdentifier = SyntaxFactory.Identifier(varName);
-            var varDeclarator = SyntaxFactory.VariableDeclarator(varIdentifier, null, varEqualsClause);
+            var varDeclarator = SyntaxFactory.VariableDeclarator(varNameToken, null, varEqualsClause);
 
             var varDeclaratorList = SyntaxFactory.SeparatedList(new[]
             {
@@ -134,22 +136,35 @@ namespace Asyncify.Extensions
         /// <param name="syntaxEditor">Editor to use</param>
         /// <param name="awaitContainingExpr">Expression which fully contains the await expression, used to position the insert for the local variable declaration</param>
         /// <param name="varTypeDeclaration">Name of the type of variable to extract to</param>
-        /// <param name="varName">Name of the local variable</param>
+        /// <param name="varNameDeclaration">Name of the local variable</param>
         /// <returns>New modified root after extraction</returns>
-        public static SyntaxNode ExtractAwaitExpressionToVariable(this AwaitExpressionSyntax awaitExpr, SyntaxEditor syntaxEditor, SyntaxNode awaitContainingExpr, IdentifierNameSyntax varTypeDeclaration, string varName)
+        public static SyntaxNode ExtractAwaitExpressionToVariable(this AwaitExpressionSyntax awaitExpr, SyntaxEditor syntaxEditor, SyntaxNode awaitContainingExpr, IdentifierNameSyntax varTypeDeclaration, IdentifierNameSyntax varNameDeclaration)
         {
 
-            LocalDeclarationStatementSyntax extractedAwaitDeclaration = awaitExpr.ExtractToLocalVariable(varTypeDeclaration, varName);
+            LocalDeclarationStatementSyntax extractedAwaitDeclaration = awaitExpr.ExtractToLocalVariable(varTypeDeclaration, varNameDeclaration.Identifier);
 
             syntaxEditor.InsertBefore(awaitContainingExpr, extractedAwaitDeclaration);
 
             // Replace the old await expression with the new local variable
-            var awaitVarIdentifierName = SyntaxFactory.IdentifierName(varName);
             
-            syntaxEditor.ReplaceNode(awaitExpr, awaitVarIdentifierName);
+            syntaxEditor.ReplaceNode(awaitExpr, varNameDeclaration);
             
             var newRoot = syntaxEditor.GetChangedRoot();
             return newRoot;
+        }
+
+        /// <summary>
+        /// Extract an await expression to a local variable
+        /// </summary>
+        /// <param name="awaitExpr">Await expression to extract</param>
+        /// <param name="syntaxEditor">Editor to use</param>
+        /// <param name="awaitContainingExpr">Expression which fully contains the await expression, used to position the insert for the local variable declaration</param>
+        /// <param name="variableSemanticContext">context which contains the variable type and name declarations</param>
+        /// <returns>New modified root after extraction</returns>
+        internal static SyntaxNode ExtractAwaitExpressionToVariable(this AwaitExpressionSyntax awaitExpr, SyntaxEditor syntaxEditor, SyntaxNode awaitContainingExpr, IVariableSemanticContext variableSemanticContext)
+        {
+            return awaitExpr.ExtractAwaitExpressionToVariable(syntaxEditor, awaitContainingExpr,
+                variableSemanticContext.VariableTypeDeclaration, variableSemanticContext.VariableNameDeclaration);
         }
 
         /// <summary>
