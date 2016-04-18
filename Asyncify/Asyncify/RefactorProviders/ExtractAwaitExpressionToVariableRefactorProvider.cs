@@ -1,18 +1,14 @@
-using System;
 using System.Composition;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Asyncify.Contexts;
 using Asyncify.Extensions;
-using Asyncify.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
-using Microsoft.CodeAnalysis.Rename;
+using Microsoft.CodeAnalysis.Formatting;
 
 namespace Asyncify.RefactorProviders
 {
@@ -89,11 +85,11 @@ namespace Asyncify.RefactorProviders
             if (containingLambda != null && containingLambda.Equals(context.OriginalContainingBodySyntax))
             {
                 context.ContainingBodySyntax = containingLambda;
-                return TransformExpressionLambdaForAwaitToVariable(context);
+                return await TransformExpressionLambdaForAwaitToVariable(context);
             }
 
             context.ContainingBodySyntax = context.OriginalContainingBodySyntax;
-            return ExtractAwaitToVariable(context);
+            return await ExtractAwaitToVariable(context);
         }
 
 
@@ -101,26 +97,26 @@ namespace Asyncify.RefactorProviders
         /// Transforms an expression lambda into a block lambda.
         /// </summary>
         /// <returns></returns>
-        private static Document TransformExpressionLambdaForAwaitToVariable(ExtractAwaitContext context)
+        private static Task<Document> TransformExpressionLambdaForAwaitToVariable(ExtractAwaitContext context)
         {
             var containingLambda = context.ContainingBodySyntax as LambdaExpressionSyntax;
             if (containingLambda == null)
-                return context.DocumentContext.Document;
+                return context.DocumentContext.Document.AsTask();
             // Single Line Lambda Logic: transform to block lambda then process.
             var originalLambdaBody = containingLambda.GetLambdaBody();
             if (originalLambdaBody == null)
-                return context.DocumentContext.Document;
+                return context.DocumentContext.Document.AsTask();
 
             var blockLambda = containingLambda.ToBlockLambda(context.SemanticContext.Model,
                 context.DocumentContext.Workspace,
                 context.DocumentContext.Token);
 
             if (blockLambda == null)
-                return context.DocumentContext.Document;
+                return context.DocumentContext.Document.AsTask();
 
             var blockSyntax = blockLambda.ChildNodes().OfType<BlockSyntax>().LastOrDefault();
             if (blockSyntax == null)
-                return context.DocumentContext.Document;
+                return context.DocumentContext.Document.AsTask();
 
             var blockAwaitExpr =
                 blockSyntax.DescendantNodes().OfType<AwaitExpressionSyntax>()
@@ -128,7 +124,7 @@ namespace Asyncify.RefactorProviders
                         n => n.ToStringWithoutTrivia().Equals(context.TargetAwaitExpression.ToStringWithoutTrivia()));
 
             if (blockAwaitExpr == null)
-                return context.DocumentContext.Document;
+                return context.DocumentContext.Document.AsTask();
 
             context.OriginalContainingBodySyntax = originalLambdaBody;
             context.ContainingBodySyntax = blockSyntax;
@@ -141,7 +137,7 @@ namespace Asyncify.RefactorProviders
         /// Merges trivia and extracts the await expression to own variable within a block body.
         /// </summary>
         /// <returns></returns>
-        private static Document ExtractAwaitToVariable(ExtractAwaitContext context)
+        private static Task<Document> ExtractAwaitToVariable(ExtractAwaitContext context)
         {
             // Merge trivia into expression to be extracted.
             var awaitIndex = context.ContainingBodySyntax.GetDescendantIndex(context.TargetAwaitExpression);
@@ -152,7 +148,7 @@ namespace Asyncify.RefactorProviders
                 triviaMergedContainingSyntax.GetDescendantNodeAtIndex<AwaitExpressionSyntax>(awaitIndex);
 
             if (triviaMergedAwaitExpr == null)
-                return context.DocumentContext.Document;
+                return context.DocumentContext.Document.AsTask();
 
 
             // Block logic: find smallest symbol in children containing the original await and move it up with a variable addition.
@@ -162,7 +158,7 @@ namespace Asyncify.RefactorProviders
 
             // Houdini await expression somehow disappeared, but lets not crash
             if (containingExpr == null)
-                return context.DocumentContext.Document;
+                return context.DocumentContext.Document.AsTask();
             
             var blockSyntaxEditor = new SyntaxEditor(triviaMergedContainingSyntax, context.DocumentContext.Workspace);
             var newBlock = triviaMergedAwaitExpr.ExtractAwaitExpressionToVariable(blockSyntaxEditor,
@@ -173,7 +169,7 @@ namespace Asyncify.RefactorProviders
             var newRoot = syntaxEditor.GetChangedRoot();
             // Replace the old node
             var newDocument = context.DocumentContext.Document.WithSyntaxRoot(newRoot);
-            return newDocument;
+            return Formatter.FormatAsync(newDocument, cancellationToken:context.DocumentContext.Token);
         }
 
         class ExtractAwaitContext : RefactoringContext<DocumentContext, VariableSemanticContext>

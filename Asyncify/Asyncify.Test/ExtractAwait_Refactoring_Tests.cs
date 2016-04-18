@@ -61,18 +61,19 @@ namespace Asyncify.Test
         {
             // NOTE: Still unsure how to disable autoformatting, but it will apply whitespace corrections to moved or modified expressions, including trivia.
             var testExpression = $@"
-{{
-    var t = ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
-}}
+        {{
+            var t = ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
+        }}
 ";
+            var correctedTrivia = TestSourceCode.TriviaTextCorrected(TestSourceCode.DefaultIndents + 1);
             var fixExpression = $@"
-{{
-        AsyncMemberMethods taskResult =
-{TestSourceCode.TriviaTextCorrected()}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.TriviaTextCorrected()};
-        var t = (taskResult){TestSourceCode.FullTriviaText}.Field1;
-}}
+        {{
+            AsyncMemberMethods taskResult =
+{correctedTrivia}await AsyncMethods.GetMemberMethods({correctedTrivia}){correctedTrivia};
+            var t = (taskResult){correctedTrivia}.Field1;
+        }}
 ";
-
+            // TODO: Complete refactoring now that formatting is involved. Add corrected trivia to comment tests
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
         }
@@ -149,7 +150,7 @@ Func<Task<AsyncMemberMethods>> lambda = async () =>
     return ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
 }};
 ";
-            var whitespaceCorrectedTrivia = TestSourceCode.TriviaTextCustom(TestSourceCode.DefaultIndentSpaces);
+            var whitespaceCorrectedTrivia = TestSourceCode.TriviaTextCustom(TestSourceCode.DefaultIndents);
             var fixExpression = $@"
 Func<Task<AsyncMemberMethods>> lambda = async () =>
 {{
@@ -243,7 +244,7 @@ Action lambda = async () => await AsyncMethods.PerformProcessing();
 Func<Task<AsyncMemberMethods>> lambda = async () => ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
 ";
 
-            var whitespaceCorrectedTrivia = TestSourceCode.TriviaTextCustom(TestSourceCode.DefaultIndentSpaces);
+            var whitespaceCorrectedTrivia = TestSourceCode.TriviaTextCustom(TestSourceCode.DefaultIndents);
             var fixExpression = $@"
 Func<Task<AsyncMemberMethods>> lambda = async () => {{
 AsyncMemberMethods taskResult =
@@ -288,7 +289,6 @@ return (taskResult).Field1;
         #endregion Lambda Single Line
 
         /*
-        TODO: try using .WithAdditionalAnnotations(Formatter.Annotation) and see if it can solve the random formatting crap
         TODO: see how it handles types that are not included in the namespace.
     */
     }

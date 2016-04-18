@@ -188,27 +188,27 @@ namespace TestHelper
 
         public static OptionSet GetTestingOptions(OptionSet workingOptions, string language)
         {
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.IndentBlock, false);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.IndentBlock, true);
             workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.IndentBraces, false);
             workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.IndentSwitchCaseSection, false);
             workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.IndentSwitchSection, false);
 
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLineForCatch, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLineForClausesInQuery, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLineForElse, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLineForFinally, false);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLineForCatch, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLineForClausesInQuery, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLineForElse, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLineForFinally, true);
 
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLineForMembersInAnonymousTypes, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLineForMembersInObjectInit, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInAccessors, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInAnonymousMethods, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInAnonymousTypes, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInControlBlocks, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInLambdaExpressionBody, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInMethods, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInObjectCollectionArrayInitializers, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInProperties, false);
-            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInTypes, false);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLineForMembersInAnonymousTypes, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLineForMembersInObjectInit, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInAccessors, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInAnonymousMethods, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInAnonymousTypes, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInControlBlocks, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInLambdaExpressionBody, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInMethods, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInObjectCollectionArrayInitializers, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInProperties, true);
+            workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInTypes, true);
 
             workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.SpaceAfterCast, false);
             workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.SpaceAfterColonInBaseTypeDeclaration, false);
@@ -236,10 +236,10 @@ namespace TestHelper
             workingOptions = workingOptions.WithChangedOption(CSharpFormattingOptions.SpacingAroundBinaryOperator, false);
 
 
-            workingOptions = workingOptions.WithChangedOption(FormattingOptions.SmartIndent, language, FormattingOptions.IndentStyle.None);
-            workingOptions = workingOptions.WithChangedOption(FormattingOptions.TabSize, language, 4);
+            workingOptions = workingOptions.WithChangedOption(FormattingOptions.SmartIndent, language, FormattingOptions.IndentStyle.Block);
+            workingOptions = workingOptions.WithChangedOption(FormattingOptions.TabSize, language, TestSourceCode.TabSize);
             workingOptions = workingOptions.WithChangedOption(FormattingOptions.UseTabs, language, false);
-            workingOptions = workingOptions.WithChangedOption(FormattingOptions.IndentationSize, language, 8);
+            workingOptions = workingOptions.WithChangedOption(FormattingOptions.IndentationSize, language, TestSourceCode.IndentSize);
             workingOptions = workingOptions.WithChangedOption(FormattingOptions.NewLine, language, Environment.NewLine);
             return workingOptions;
         }

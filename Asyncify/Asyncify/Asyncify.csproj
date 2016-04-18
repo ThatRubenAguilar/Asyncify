@@ -46,6 +46,7 @@
     <Compile Include="Extensions\LambdaBodyInfo.cs" />
     <Compile Include="Extensions\NodeExtensions.cs" />
     <Compile Include="Extensions\SymbolExtensions.cs" />
+    <Compile Include="Extensions\TaskExtensions.cs" />
     <Compile Include="Extensions\TokenExtensions.cs" />
     <Compile Include="FixProviders\ConsiderAwaitOverBlockingTaskGetResultCodeFixProvider.cs" />
     <Compile Include="FixProviders\ConsiderAwaitOverBlockingTaskResultCodeFixProvider.cs" />

@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.Formatting;
 
 namespace Asyncify.FixProviders
 {
@@ -89,7 +90,7 @@ namespace Asyncify.FixProviders
 
             // Replace the old node
             var newDocument = document.WithSyntaxRoot(newRoot);
-            return newDocument;
+            return await Formatter.FormatAsync(newDocument, cancellationToken: cancellationToken);
         }
 
         

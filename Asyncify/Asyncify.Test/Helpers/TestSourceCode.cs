@@ -8,8 +8,9 @@ namespace TestHelper
 {
     public static class TestSourceCode
     {
-        public const int DefaultIndentSpaces = 8;
-        public const int DefaultCorrectedSpaces = 0;
+        public const int TabSize = 4;
+        public const int IndentSize = TabSize;
+        public const int DefaultIndents = 2;
 
 
         static readonly string FullTriviaTextTemplate = @"// One Line Comment 
@@ -26,19 +27,24 @@ namespace TestHelper
 ";
 
         /// <summary>
-        /// Creates trivia text which is indented existingSpaces amount and will be indented to correctedSpaces amount in case of running formatter.
+        /// Creates trivia text which is indented formattedIndents amount for ifDirective and regionDirective and will be indented to flatIndents amount for elseDirective and multilineComment.
         /// </summary>
-        /// <param name="existingSpaces"></param>
-        /// <param name="correctedSpaces"></param>
         /// <returns></returns>
-        public static string TriviaTextCorrected(int existingSpaces = DefaultIndentSpaces, int correctedSpaces = DefaultCorrectedSpaces)
+        public static string TriviaTextCorrected(int regionIndents, int ifDirectiveIndents)
         {
-            return TriviaTextCustom(existingSpaces, correctedSpaces, correctedSpaces, existingSpaces);
+            return TriviaTextCustom(ifDirectiveIndents, 0, 0, regionIndents);
+        }
+        public static string TriviaTextCorrected(int regionIndents)
+        {
+            var ifDirectiveIndents = regionIndents - 1;
+            if (ifDirectiveIndents < 0)
+                ifDirectiveIndents = 0;
+            return TriviaTextCustom(ifDirectiveIndents , 0, 0, regionIndents);
         }
 
-        public static string TriviaTextCustom(int ifDirectiveSpaces=0, int elseDirectiveSpaces=0, int multilineCommentSpaces=0, int regionSpaces=0)
+        public static string TriviaTextCustom(int ifDirectiveIndents=0, int elseDirectiveIndents=0, int multilineCommentIndents=0, int regionIndents=0)
         {
-            return String.Format(FullTriviaTextTemplate, CreateSpaces(ifDirectiveSpaces), CreateSpaces(elseDirectiveSpaces), CreateSpaces(multilineCommentSpaces), CreateSpaces(regionSpaces));
+            return String.Format(FullTriviaTextTemplate, CreateSpaces(ifDirectiveIndents*IndentSize), CreateSpaces(elseDirectiveIndents * IndentSize), CreateSpaces(multilineCommentIndents * IndentSize), CreateSpaces(regionIndents * IndentSize));
         }
 
         private static string CreateSpaces(int numSpaces)
@@ -52,17 +58,17 @@ namespace TestHelper
         }
 
         /// <summary>
-        /// Creates trivia text which is indented existingSpaces amount
+        /// Creates trivia text which is indented formattedIndents amount
         /// </summary>
-        /// <param name="existingSpaces"></param>
+        /// <param name="formattedIndents"></param>
         /// <returns></returns>
-        public static string TriviaText(int existingSpaces = DefaultIndentSpaces)
+        public static string TriviaText(int formattedIndents = DefaultIndents)
         {
-            return TriviaTextCustom(existingSpaces, existingSpaces, existingSpaces, existingSpaces);
+            return TriviaTextCustom(formattedIndents, formattedIndents, formattedIndents, formattedIndents);
         }
 
-        // NOTE: Indent code using this to 2 tabs (4 spaces each) or face the wrath of the whitespace formatter
-        public static readonly string FullTriviaText = TriviaText();
+
+        public static readonly string FullTriviaText = TriviaTextCustom(DefaultIndents, 0, 0, DefaultIndents);
 
         public static readonly string TaskChildClass = @"
     using System;
