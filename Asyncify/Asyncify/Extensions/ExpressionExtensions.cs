@@ -181,9 +181,8 @@ namespace Asyncify.Extensions
             // not a single line lambda
             if (lambdaBody == null) 
                 return lambda;
-
-            var lambdaInfo = semanticModel.GetSymbolInfo(lambda, cancellationToken);
-            var lambdaSymbol = lambdaInfo.Symbol as IMethodSymbol;
+            
+            var lambdaSymbol = semanticModel.GetSymbol<IMethodSymbol>(lambda, cancellationToken);
 
             if (lambdaSymbol == null)
                 return null;

@@ -48,10 +48,8 @@ namespace Asyncify.Analyzers
             // Name check for Result Task property
             if (!identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.ResultProperty))
                 return;
-
-            var symbolInfo = context.SemanticModel.GetSymbolInfo(identifierNameSyntax, context.CancellationToken);
-
-            var propertySymbol = symbolInfo.Symbol as IPropertySymbol;
+            
+            var propertySymbol = context.SemanticModel.GetSymbol<IPropertySymbol>(identifierNameSyntax, context.CancellationToken);
 
             // Ensure we have a property
             // Ensure we have the Threading.Task
@@ -78,10 +76,8 @@ namespace Asyncify.Analyzers
             // Name check for GetResult TaskAwaiter method
             if (!identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.GetResultMethod))
                 return;
-
-            var symbolInfo = context.SemanticModel.GetSymbolInfo(identifierNameSyntax, context.CancellationToken);
-
-            var methodSymbol = symbolInfo.Symbol as IMethodSymbol;
+            
+            var methodSymbol = context.SemanticModel.GetSymbol<IMethodSymbol>(identifierNameSyntax, context.CancellationToken);
 
             // Ensure we have a method
             // Ensure we have the Threading.Task

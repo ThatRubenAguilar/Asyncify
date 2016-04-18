@@ -404,5 +404,35 @@ namespace Asyncify.Extensions
         {
             return node.AncestorsAndSelf().OfType<LambdaExpressionSyntax>().FirstOrDefault();
         }
+
+        /// <summary>
+        /// Searches for a node of type T within exclusive of node to inclusive of ancestorStopNode
+        /// </summary>
+        /// <typeparam name="T">Type of the node to search for</typeparam>
+        /// <param name="node">Descendant of ancestorStopNode that is the start of the search</param>
+        /// <param name="ancestorStopNode">Ancestor of node that is the inclusive endpoint of the search</param>
+        /// <returns></returns>
+        public static T ContainedWithinNodeOrDefault<T>(this SyntaxNode node, SyntaxNode ancestorStopNode)
+            where T : SyntaxNode
+        {
+            var containingNode = node.Ancestors().OfType<T>().FirstOrDefault();
+            if (containingNode != null && ancestorStopNode.Contains(containingNode))
+                return containingNode;
+            return null;
+        }
+        /// <summary>
+        /// Determines if a node of type T is within exclusive of node to inclusive of ancestorStopNode
+        /// </summary>
+        /// <typeparam name="T">Type of the node to search for</typeparam>
+        /// <param name="node">Descendant of ancestorStopNode that is the start of the search</param>
+        /// <param name="ancestorStopNode">Ancestor of node that is the inclusive endpoint of the search</param>
+        /// <returns></returns>
+        public static bool ContainedWithin<T>(this SyntaxNode node, SyntaxNode ancestorStopNode)
+            where T : SyntaxNode
+        {
+            return node.ContainedWithinNodeOrDefault<T>(ancestorStopNode) != null;
+        }
+
+        
     }
 }

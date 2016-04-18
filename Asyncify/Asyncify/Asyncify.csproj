@@ -45,6 +45,7 @@
     <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Extensions\LambdaBodyInfo.cs" />
     <Compile Include="Extensions\NodeExtensions.cs" />
+    <Compile Include="Extensions\SemanticExtensions.cs" />
     <Compile Include="Extensions\SymbolExtensions.cs" />
     <Compile Include="Extensions\TaskExtensions.cs" />
     <Compile Include="Extensions\TokenExtensions.cs" />

@@ -46,9 +46,7 @@ namespace Asyncify.Analyzers
             if (!identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.WaitMethod))
                 return;
 
-            var symbolInfo = context.SemanticModel.GetSymbolInfo(identifierNameSyntax, context.CancellationToken);
-
-            var methodSymbol = symbolInfo.Symbol as IMethodSymbol;
+            var methodSymbol = context.SemanticModel.GetSymbol<IMethodSymbol>(identifierNameSyntax, context.CancellationToken);
 
             // Ensure we have a method
             // Ensure we have the Threading.Task

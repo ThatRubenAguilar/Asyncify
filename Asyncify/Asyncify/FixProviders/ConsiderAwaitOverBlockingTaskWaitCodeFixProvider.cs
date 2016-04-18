@@ -44,8 +44,9 @@ namespace Asyncify.FixProviders
             if (identifierNameSyntax.Identifier.Text.Equals(AsyncifyResources.WaitMethod))
             {
                 var semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
-                var symbolInfo = semanticModel.GetSymbolInfo(identifierNameSyntax, context.CancellationToken);
-                var methodSymbol = (IMethodSymbol)symbolInfo.Symbol;
+                var methodSymbol = semanticModel.GetSymbol<IMethodSymbol>(identifierNameSyntax, context.CancellationToken);
+                if (methodSymbol == null)
+                    return;
 
                 // Only want .Wait() or .Wait(CancellationToken)
                 if (methodSymbol.Parameters.Length == 0 || methodSymbol.DoParametersMatch(new []{ typeof(CancellationToken) }))

@@ -80,8 +80,10 @@ namespace Asyncify.FixProviders
 
 
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-            var symbolInfo = semanticModel.GetSymbolInfo(getAwaiterSyntax, cancellationToken);
-            var methodSymbol = (IMethodSymbol)symbolInfo.Symbol;
+            var methodSymbol = semanticModel.GetSymbol<IMethodSymbol>(getAwaiterSyntax, cancellationToken);
+            if (methodSymbol == null)
+                return document;
+
             var callerIsGenericTask = AsyncifyResources.TaskGenericRegex.IsMatch(methodSymbol.ContainingType.ToString());
             
             var syntaxEditor = new SyntaxEditor(root, document.Project.Solution.Workspace);

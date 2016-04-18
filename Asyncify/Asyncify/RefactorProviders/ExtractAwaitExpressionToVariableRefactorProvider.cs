@@ -85,11 +85,11 @@ namespace Asyncify.RefactorProviders
             if (containingLambda != null && containingLambda.Equals(context.OriginalContainingBodySyntax))
             {
                 context.ContainingBodySyntax = containingLambda;
-                return await TransformExpressionLambdaForAwaitToVariable(context);
+                return await TransformExpressionLambdaForAwaitToVariable(context).ConfigureAwait(false);
             }
 
             context.ContainingBodySyntax = context.OriginalContainingBodySyntax;
-            return await ExtractAwaitToVariable(context);
+            return await ExtractAwaitToVariable(context).ConfigureAwait(false);
         }
 
 
