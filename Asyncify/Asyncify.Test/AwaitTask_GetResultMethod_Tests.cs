@@ -35,7 +35,7 @@ namespace Asyncify.Test
         public void Should_await_task_fix_on_generic_task_getresult_method()
         {
             var testExpression = @"var val = AsyncMethods.GetNumber().GetAwaiter().GetResult();";
-            var fixExpression = @"var val = await AsyncMethods.GetNumber();";
+            var fixExpression = @"        var val = await AsyncMethods.GetNumber();";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetNumber()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -45,9 +45,9 @@ namespace Asyncify.Test
         public void Should_await_correct_task_fix_on_nested_generic_task_getresult_method()
         {
             var testExpression = @"var val = AsyncMethods.GetMemberMethods().GetAwaiter().GetResult().GetNumber().GetAwaiter().GetResult().ToString();";
-            var fixOuterExpression = @"var val = (await AsyncMethods.GetMemberMethods().GetAwaiter().GetResult().GetNumber()).ToString();";
-            var fixInnerExpression = @"var val = (await AsyncMethods.GetMemberMethods()).GetNumber().GetAwaiter().GetResult().ToString();";
-            var fixBothExpression = @"var val = (await (await AsyncMethods.GetMemberMethods()).GetNumber()).ToString();";
+            var fixOuterExpression = @"        var val = (await AsyncMethods.GetMemberMethods().GetAwaiter().GetResult().GetNumber()).ToString();";
+            var fixInnerExpression = @"        var val = (await AsyncMethods.GetMemberMethods()).GetNumber().GetAwaiter().GetResult().ToString();";
+            var fixBothExpression = @"        var val = (await (await AsyncMethods.GetMemberMethods()).GetNumber()).ToString();";
             var expected = AwaitTaskGetResultMethodExpectedResults(testExpression, "AsyncMethods.GetMemberMethods()", "AsyncMethods.GetMemberMethods().GetAwaiter().GetResult().GetNumber()").ToArray();
             
             AwaitTaskDiagnosticsAndFix(testExpression, expected, fixBothExpression);
@@ -76,7 +76,6 @@ var val = awaiter.GetResult();";
         [TestMethod, TestCategory("Await.Task.GetAwaiter().GetResult()")]
         public void Should_not_add_parenthesis_to_await_task_fix_on_generic_task_getresult_method_when_return_value_not_used()
         {
-            // BUG: The document emitted by the code fix provider does not have two idents, but the document in the changed solution after the fix is applied has two tab (4 spaces) idents on the fixed expression. This seems to only occur with raw expression calls. 
             var testExpression = @"
 AsyncMethods.GetMemberMethods().GetAwaiter().GetResult();";
             var fixExpression = @"
@@ -97,13 +96,16 @@ AsyncMethods.GetMemberMethods().GetAwaiter().GetResult();";
         {TestSourceCode.FullTriviaText}
         GetAwaiter(){TestSourceCode.FullTriviaText}
         .GetResult(){TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
+
+            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
+            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
             var fixExpression = $@"
-        var val = {TestSourceCode.FullTriviaText}
-        await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}
-        ){TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
+        var val = {unformattedTrivia}
+        await AsyncMethods.GetMemberMethods({unformattedTrivia}
+        ){formattedTrivia}
+{formattedTrivia}
+{formattedTrivia}
+{formattedTrivia}; {unformattedTrivia}";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -115,7 +117,7 @@ AsyncMethods.GetMemberMethods().GetAwaiter().GetResult();";
         public void Should_add_parenthesis_to_await_task_fix_on_generic_task_getresult_method_when_using_broken_syntax_task_field()
         {
             var testExpression = @"var val = AsyncMethods.GetMemberMethods().GetAwaiter().GetResult().Fi;";
-            var fixExpression = @"var val = (await AsyncMethods.GetMemberMethods()).Fi;";
+            var fixExpression = @"        var val = (await AsyncMethods.GetMemberMethods()).Fi;";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression, true);
@@ -125,7 +127,7 @@ AsyncMethods.GetMemberMethods().GetAwaiter().GetResult();";
         public void Should_not_add_parenthesis_to_await_task_fix_on_generic_task_getresult_method_when_using_broken_syntax()
         {
             var testExpression = @"var val = AsyncMethods.GetMemberMethods().GetAwaiter().GetResult()";
-            var fixExpression = @"var val = await AsyncMethods.GetMemberMethods()";
+            var fixExpression = @"        var val = await AsyncMethods.GetMemberMethods()";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression, true);
@@ -134,7 +136,6 @@ AsyncMethods.GetMemberMethods().GetAwaiter().GetResult();";
         [TestMethod, TestCategory("Await.Task.GetAwaiter().GetResult()")]
         public void Should_not_add_parenthesis_to_await_task_fix_on_non_generic_task_getresult_method()
         {
-            // BUG: The document emitted by the code fix provider does not have two idents, but the document in the changed solution after the fix is applied has two tab (4 spaces) idents on the fixed expression. This seems to only occur with raw expression calls. 
             var testExpression = @"
 AsyncMethods.PerformProcessing().GetAwaiter().GetResult();";
             var fixExpression = @"
@@ -147,7 +148,6 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult();";
         [TestMethod, TestCategory("Await.Task.GetAwaiter().GetResult()")]
         public void Should_not_add_parenthesis_to_await_task_fix_on_non_generic_task_getresult_method_when_using_broken_syntax()
         {
-            // BUG: The document emitted by the code fix provider does not have two idents, but the document in the changed solution after the fix is applied has two tab (4 spaces) idents on the fixed expression. This seems to only occur with raw expression calls. 
             var testExpression = @"
 AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
             var fixExpression = @"
@@ -161,7 +161,7 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         public void Should_not_add_parenthesis_to_await_task_fix_on_non_generic_task_getresult_method_when_using_broken_parenthesis_syntax()
         {
             var testExpression = @"(AsyncMethods.PerformProcessing().GetAwaiter().GetResult())";
-            var fixExpression = @"(await AsyncMethods.PerformProcessing())";
+            var fixExpression = @"        (await AsyncMethods.PerformProcessing())";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.PerformProcessing()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression, true);
@@ -177,12 +177,15 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         ){TestSourceCode.FullTriviaText}.
         {TestSourceCode.FullTriviaText}
         GetAwaiter(){TestSourceCode.FullTriviaText}.GetResult(){TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
+
+            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
+            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
             var fixExpression = $@"
-        {TestSourceCode.FullTriviaText}
-        await AsyncMethods.PerformProcessing({TestSourceCode.FullTriviaText}
-        ){TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}{TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
+        {unformattedTrivia}
+        await AsyncMethods.PerformProcessing({unformattedTrivia}
+        ){formattedTrivia}
+{formattedTrivia}
+{formattedTrivia}{formattedTrivia}; {unformattedTrivia}";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.PerformProcessing()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -195,7 +198,7 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         public void Should_add_parenthesis_to_await_task_fix_on_generic_task_getresult_method_when_using_task_field()
         {
             var testExpression = @"var val = AsyncMethods.GetMemberMethods().GetAwaiter().GetResult().Field1;";
-            var fixExpression = @"var val = (await AsyncMethods.GetMemberMethods()).Field1;";
+            var fixExpression = @"        var val = (await AsyncMethods.GetMemberMethods()).Field1;";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -205,7 +208,7 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         public void Should_not_add_parenthesis_to_await_task_fix_on_already_parenthesized_generic_task_getresult_method_when_using_task_field()
         {
             var testExpression = @"var val = (AsyncMethods.GetMemberMethods().GetAwaiter().GetResult()).Field1;";
-            var fixExpression = @"var val = (await AsyncMethods.GetMemberMethods()).Field1;";
+            var fixExpression = @"        var val = (await AsyncMethods.GetMemberMethods()).Field1;";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -223,14 +226,17 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         GetAwaiter(){TestSourceCode.FullTriviaText}
         .GetResult(){TestSourceCode.FullTriviaText}
         .Field1{TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
+
+            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
+            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
             var fixExpression = $@"
-        var val = {TestSourceCode.FullTriviaText}
-        (await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}
-        )){TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        .Field1{TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
+        var val = {unformattedTrivia}
+        (await AsyncMethods.GetMemberMethods({unformattedTrivia}
+        )){unformattedTrivia}
+        {unformattedTrivia}
+        {unformattedTrivia}
+        {unformattedTrivia}
+        .Field1{formattedTrivia}; {unformattedTrivia}";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -242,7 +248,7 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         public void Should_add_parenthesis_to_await_task_fix_on_generic_task_getresult_method_when_using_task_property()
         {
             var testExpression = @"var val = AsyncMethods.GetMemberMethods().GetAwaiter().GetResult().Property1;";
-            var fixExpression = @"var val = (await AsyncMethods.GetMemberMethods()).Property1;";
+            var fixExpression = @"        var val = (await AsyncMethods.GetMemberMethods()).Property1;";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -252,7 +258,7 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         public void Should_not_add_parenthesis_to_await_task_fix_on_already_parenthesized_generic_task_getresult_method_when_using_task_property()
         {
             var testExpression = @"var val = (AsyncMethods.GetMemberMethods().GetAwaiter().GetResult()).Property1;";
-            var fixExpression = @"var val = (await AsyncMethods.GetMemberMethods()).Property1;";
+            var fixExpression = @"        var val = (await AsyncMethods.GetMemberMethods()).Property1;";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -269,14 +275,17 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         GetAwaiter(){TestSourceCode.FullTriviaText}
         .GetResult(){TestSourceCode.FullTriviaText}
         .Property1{TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
+
+            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
+            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
             var fixExpression = $@"
-        var val = {TestSourceCode.FullTriviaText}
-        (await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}
-        )){TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        .Property1{TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
+        var val = {unformattedTrivia}
+        (await AsyncMethods.GetMemberMethods({unformattedTrivia}
+        )){unformattedTrivia}
+        {unformattedTrivia}
+        {unformattedTrivia}
+        {unformattedTrivia}
+        .Property1{formattedTrivia}; {unformattedTrivia}";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -288,7 +297,7 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         public void Should_add_parenthesis_to_await_task_fix_on_generic_task_getresult_method_when_using_task_method()
         {
             var testExpression = @"var val = AsyncMethods.GetMemberMethods().GetAwaiter().GetResult().GetNumber();";
-            var fixExpression = @"var val = (await AsyncMethods.GetMemberMethods()).GetNumber();";
+            var fixExpression = @"        var val = (await AsyncMethods.GetMemberMethods()).GetNumber();";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -298,7 +307,7 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         public void Should_not_add_parenthesis_to_await_task_fix_on_already_parenthesized_generic_task_getresult_method_when_using_task_method()
         {
             var testExpression = @"var val = (AsyncMethods.GetMemberMethods().GetAwaiter().GetResult()).GetNumber();";
-            var fixExpression = @"var val = (await AsyncMethods.GetMemberMethods()).GetNumber();";
+            var fixExpression = @"        var val = (await AsyncMethods.GetMemberMethods()).GetNumber();";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);
@@ -316,14 +325,17 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         GetAwaiter(){TestSourceCode.FullTriviaText}
         .GetResult(){TestSourceCode.FullTriviaText}
         .GetNumber(){TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
+
+            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
+            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
             var fixExpression = $@"
-        var val = {TestSourceCode.FullTriviaText}
-        (await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}
-        )){TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        .GetNumber(){TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
+        var val = {unformattedTrivia}
+        (await AsyncMethods.GetMemberMethods({unformattedTrivia}
+        )){unformattedTrivia}
+        {unformattedTrivia}
+        {unformattedTrivia}
+        {unformattedTrivia}
+        .GetNumber(){formattedTrivia}; {unformattedTrivia}";
             var expected = AwaitTaskGetResultMethodExpectedResult(testExpression, "AsyncMethods.GetMemberMethods()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression);

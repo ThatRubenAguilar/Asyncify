@@ -21,15 +21,15 @@ namespace Asyncify.Test
         public void Should_extract_await_in_block_code_for_generic_task()
         {
             var testExpression = @"
-{
-    var t = (await AsyncMethods.GetMemberMethods()).Field1;
-}
+        {
+            var t = (await AsyncMethods.GetMemberMethods()).Field1;
+        }
 ";
             var fixExpression = @"
-{
-        AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
-        var t = (taskResult).Field1;
-}
+        {
+            AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
+            var t = (taskResult).Field1;
+        }
 ";
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
@@ -65,15 +65,14 @@ namespace Asyncify.Test
             var t = ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
         }}
 ";
-            var correctedTrivia = TestSourceCode.TriviaTextCorrected(TestSourceCode.DefaultIndents + 1);
+            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents + 1);
             var fixExpression = $@"
         {{
             AsyncMemberMethods taskResult =
-{correctedTrivia}await AsyncMethods.GetMemberMethods({correctedTrivia}){correctedTrivia};
-            var t = (taskResult){correctedTrivia}.Field1;
+{formattedTrivia}await AsyncMethods.GetMemberMethods({formattedTrivia}){formattedTrivia};
+            var t = (taskResult){formattedTrivia}.Field1;
         }}
 ";
-            // TODO: Complete refactoring now that formatting is involved. Add corrected trivia to comment tests
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
         }
@@ -82,15 +81,15 @@ namespace Asyncify.Test
         public void Should_extract_await_in_block_code_for_generic_task_on_broken_syntax()
         {
             var testExpression = @"
-{
-    var t = (await AsyncMethods.GetMemberMethods()).Field1
-}
+        {
+            var t = (await AsyncMethods.GetMemberMethods()).Field1
+        }
 ";
             var fixExpression = @"
-{
-        AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
-        var t = (taskResult).Field1
-}
+        {
+            AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
+            var t = (taskResult).Field1
+        }
 ";
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
@@ -101,17 +100,17 @@ namespace Asyncify.Test
         public void Should_extract_await_in_lambda_block_code_for_generic_task()
         {
             var testExpression = @"
-Func<Task<AsyncMemberMethods>> lambda = async () =>
-{
-    return (await AsyncMethods.GetMemberMethods()).Field1;
-};
+        Func<Task<AsyncMemberMethods>> lambda = async () =>
+        {
+            return (await AsyncMethods.GetMemberMethods()).Field1;
+        };
 ";
             var fixExpression = @"
-Func<Task<AsyncMemberMethods>> lambda = async () =>
-{
-AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
-return (taskResult).Field1;
-};
+        Func<Task<AsyncMemberMethods>> lambda = async () =>
+        {
+            AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
+            return (taskResult).Field1;
+        };
 ";
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
@@ -145,19 +144,19 @@ Action lambda = async () =>
         public void Should_extract_await_in_commented_lambda_block_code_for_generic_task()
         {
             var testExpression = $@"
-Func<Task<AsyncMemberMethods>> lambda = async () =>
-{{
-    return ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
-}};
+        Func<Task<AsyncMemberMethods>> lambda = async () =>
+        {{
+            return ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
+        }};
 ";
-            var whitespaceCorrectedTrivia = TestSourceCode.TriviaTextCustom(TestSourceCode.DefaultIndents);
+            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents+1);
             var fixExpression = $@"
-Func<Task<AsyncMemberMethods>> lambda = async () =>
-{{
-AsyncMemberMethods taskResult =
-{whitespaceCorrectedTrivia}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){whitespaceCorrectedTrivia};
-return (taskResult){TestSourceCode.FullTriviaText}.Field1;
-}};
+        Func<Task<AsyncMemberMethods>> lambda = async () =>
+        {{
+            AsyncMemberMethods taskResult =
+{formattedTrivia}await AsyncMethods.GetMemberMethods({formattedTrivia}){formattedTrivia};
+            return (taskResult){formattedTrivia}.Field1;
+        }};
 ";
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
@@ -167,17 +166,17 @@ return (taskResult){TestSourceCode.FullTriviaText}.Field1;
         public void Should_extract_await_in_lambda_block_code_for_generic_task_on_broken_syntax()
         {
             var testExpression = @"
-Func<Task<AsyncMemberMethods>> lambda = async () =>
-{
-    return (await AsyncMethods.GetMemberMethods()).Field1
-};
+        Func<Task<AsyncMemberMethods>> lambda = async () =>
+        {
+            return (await AsyncMethods.GetMemberMethods()).Field1
+        };
 ";
             var fixExpression = @"
-Func<Task<AsyncMemberMethods>> lambda = async () =>
-{
-AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
-return (taskResult).Field1
-};
+        Func<Task<AsyncMemberMethods>> lambda = async () =>
+        {
+            AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
+            return (taskResult).Field1
+        };
 ";
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
@@ -186,17 +185,17 @@ return (taskResult).Field1
         public void Should_extract_await_in_lambda_block_code_for_generic_task_with_non_async_broken_syntax()
         {
             var testExpression = @"
-Func<Task<AsyncMemberMethods>> lambda = () =>
-{
-    return (await AsyncMethods.GetMemberMethods()).Field1;
-};
+        Func<Task<AsyncMemberMethods>> lambda = () =>
+        {
+            return (await AsyncMethods.GetMemberMethods()).Field1;
+        };
 ";
             var fixExpression = @"
-Func<Task<AsyncMemberMethods>> lambda = () =>
-{
-AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
-return (taskResult).Field1;
-};
+        Func<Task<AsyncMemberMethods>> lambda = () =>
+        {
+            AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
+            return (taskResult).Field1;
+        };
 ";
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression, true);
@@ -207,13 +206,14 @@ return (taskResult).Field1;
         public void Should_extract_await_in_lambda_single_line_for_generic_task()
         {
             var testExpression = @"
-Func<Task<AsyncMemberMethods>> lambda = async () => (await AsyncMethods.GetMemberMethods()).Field1;
+        Func<Task<AsyncMemberMethods>> lambda = async () => (await AsyncMethods.GetMemberMethods()).Field1;
 ";
             var fixExpression = @"
-Func<Task<AsyncMemberMethods>> lambda = async () => {
-AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
-return (taskResult).Field1;
-};
+        Func<Task<AsyncMemberMethods>> lambda = async () =>
+        {
+            AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
+            return (taskResult).Field1;
+        };
 ";
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
@@ -241,16 +241,17 @@ Action lambda = async () => await AsyncMethods.PerformProcessing();
         public void Should_extract_await_in_commented_lambda_single_line_for_generic_task()
         {
             var testExpression = $@"
-Func<Task<AsyncMemberMethods>> lambda = async () => ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
+        Func<Task<AsyncMemberMethods>> lambda = async () => ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
 ";
 
-            var whitespaceCorrectedTrivia = TestSourceCode.TriviaTextCustom(TestSourceCode.DefaultIndents);
+            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents+1);
             var fixExpression = $@"
-Func<Task<AsyncMemberMethods>> lambda = async () => {{
-AsyncMemberMethods taskResult =
-{whitespaceCorrectedTrivia}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){whitespaceCorrectedTrivia};
-return (taskResult){TestSourceCode.FullTriviaText}.Field1;
-}};
+        Func<Task<AsyncMemberMethods>> lambda = async () =>
+        {{
+            AsyncMemberMethods taskResult =
+{formattedTrivia}await AsyncMethods.GetMemberMethods({formattedTrivia}){formattedTrivia};
+            return (taskResult){formattedTrivia}.Field1;
+        }};
 ";
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
@@ -260,13 +261,14 @@ return (taskResult){TestSourceCode.FullTriviaText}.Field1;
         public void Should_extract_await_in_lambda_single_line_for_generic_task_on_broken_syntax()
         {
             var testExpression = @"
-Func<Task<AsyncMemberMethods>> lambda = async () => (await AsyncMethods.GetMemberMethods()).Field1
+        Func<Task<AsyncMemberMethods>> lambda = async () => (await AsyncMethods.GetMemberMethods()).Field1
 ";
             var fixExpression = @"
-Func<Task<AsyncMemberMethods>> lambda = async () => {
-AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
-return (taskResult).Field1;
-}";
+        Func<Task<AsyncMemberMethods>> lambda = async () =>
+        {
+            AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
+            return (taskResult).Field1;
+        }";
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
         }
@@ -275,13 +277,14 @@ return (taskResult).Field1;
         public void Should_extract_await_in_lambda_single_line_for_generic_task_with_non_async_broken_syntax()
         {
             var testExpression = @"
-Func<Task<AsyncMemberMethods>> lambda = () => (await AsyncMethods.GetMemberMethods()).Field1;
+        Func<Task<AsyncMemberMethods>> lambda = () => (await AsyncMethods.GetMemberMethods()).Field1;
 ";
             var fixExpression = @"
-Func<Task<AsyncMemberMethods>> lambda = () => {
-AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
-return (taskResult).Field1;
-};
+        Func<Task<AsyncMemberMethods>> lambda = () =>
+        {
+            AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
+            return (taskResult).Field1;
+        };
 ";
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression, true);

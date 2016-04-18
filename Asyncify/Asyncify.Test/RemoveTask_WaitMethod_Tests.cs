@@ -73,13 +73,15 @@ namespace Asyncify.Test
         {TestSourceCode.FullTriviaText}
         Wait(){TestSourceCode.FullTriviaText};
         {TestSourceCode.FullTriviaText}";
+
+            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
             var fixExpression = $@"
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}";
+        {unformattedTrivia}
+        {unformattedTrivia}
+        {unformattedTrivia}
+        {unformattedTrivia}
+        {unformattedTrivia}
+        {unformattedTrivia}";
             
             var expected = RemoveTaskWaitMethodExpectedResult(testExpression, "AsyncMethods.GetNumber()");
 

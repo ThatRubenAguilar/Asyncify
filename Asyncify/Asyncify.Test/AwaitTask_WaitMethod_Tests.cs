@@ -35,7 +35,6 @@ namespace Asyncify.Test
         [TestMethod, TestCategory("Await.Task.Wait()")]
         public void Should_await_task_fix_on_non_generic_task_wait_method()
         {
-            // BUG: The document emitted by the code fix provider does not have two idents, but the document in the changed solution after the fix is applied has two tab (4 spaces) idents on the fixed expression. This seems to only occur with raw expression calls. 
             var testExpression = @"
 AsyncMethods.PerformProcessing().Wait();";
             var fixExpression = @"
@@ -76,11 +75,15 @@ AsyncMethods.PerformProcessing().Wait();";
         AsyncMethods.PerformProcessing({TestSourceCode.FullTriviaText}
         ){TestSourceCode.FullTriviaText}.{TestSourceCode.FullTriviaText}
         Wait(){TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
+
+
+            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
+            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
             var fixExpression = $@"
-        {TestSourceCode.FullTriviaText}
-        await AsyncMethods.PerformProcessing({TestSourceCode.FullTriviaText}
-        ){TestSourceCode.FullTriviaText}{TestSourceCode.FullTriviaText}
-        {TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
+        {unformattedTrivia}
+        await AsyncMethods.PerformProcessing({unformattedTrivia}
+        ){formattedTrivia}{formattedTrivia}
+{formattedTrivia}; {unformattedTrivia}";
             
             var expected = AwaitTaskWaitMethodExpectedResult(testExpression, "AsyncMethods.PerformProcessing()");
 
@@ -90,7 +93,6 @@ AsyncMethods.PerformProcessing().Wait();";
         [TestMethod, TestCategory("Await.Task.Wait()")]
         public void Should_await_task_fix_on_non_generic_task_wait_method_when_using_broken_syntax()
         {
-            // BUG: The document emitted by the code fix provider does not have two idents, but the document in the changed solution after the fix is applied has two tab (4 spaces) idents on the fixed expression. This seems to only occur with raw expression calls. 
             var testExpression = @"
 AsyncMethods.PerformProcessing().Wait()";
             var fixExpression = @"
@@ -105,7 +107,7 @@ AsyncMethods.PerformProcessing().Wait()";
         public void Should_await_task_fix_on_non_generic_task_wait_method_when_using_broken_parenthesis_syntax()
         {
             var testExpression = @"(AsyncMethods.PerformProcessing().Wait())";
-            var fixExpression = @"(await AsyncMethods.PerformProcessing())";
+            var fixExpression = @"        (await AsyncMethods.PerformProcessing())";
             var expected = AwaitTaskWaitMethodExpectedResult(testExpression, "AsyncMethods.PerformProcessing()");
 
             AwaitTaskDiagnosticAndFix(testExpression, expected, fixExpression, true);

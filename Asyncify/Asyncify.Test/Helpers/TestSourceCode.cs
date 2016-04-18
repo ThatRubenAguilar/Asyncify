@@ -27,21 +27,32 @@ namespace TestHelper
 ";
 
         /// <summary>
-        /// Creates trivia text which is indented formattedIndents amount for ifDirective and regionDirective and will be indented to flatIndents amount for elseDirective and multilineComment.
+        /// Creates trivia text which is indented ifDirectiveIndents amount for ifDirective and will be indented to regionIndents amount for regions. This is the format output from Formatter running over the trivia text. Typically ifDirective is aligned to the closest block indent, and region is aligned to the closest variable indent.
         /// </summary>
         /// <returns></returns>
-        public static string TriviaTextCorrected(int regionIndents, int ifDirectiveIndents)
+        public static string TriviaTextFormatted(int regionIndents, int ifDirectiveIndents)
         {
             return TriviaTextCustom(ifDirectiveIndents, 0, 0, regionIndents);
         }
-        public static string TriviaTextCorrected(int regionIndents)
+        /// <summary>
+        /// Creates trivia text which is indented ifDirectiveIndents amount for ifDirective and will be indented to regionIndents amount for regions. This is the format output from Formatter running over the trivia text. This handles the common case of ifDirectiveIndents = regionIdents-1
+        /// </summary>
+        /// <returns></returns>
+        public static string TriviaTextFormatted(int regionIndents = DefaultIndents)
         {
             var ifDirectiveIndents = regionIndents - 1;
             if (ifDirectiveIndents < 0)
                 ifDirectiveIndents = 0;
             return TriviaTextCustom(ifDirectiveIndents , 0, 0, regionIndents);
         }
-
+        /// <summary>
+        /// Creates trivia text with a fully custom format
+        /// </summary>
+        /// <param name="ifDirectiveIndents"></param>
+        /// <param name="elseDirectiveIndents"></param>
+        /// <param name="multilineCommentIndents"></param>
+        /// <param name="regionIndents"></param>
+        /// <returns></returns>
         public static string TriviaTextCustom(int ifDirectiveIndents=0, int elseDirectiveIndents=0, int multilineCommentIndents=0, int regionIndents=0)
         {
             return String.Format(FullTriviaTextTemplate, CreateSpaces(ifDirectiveIndents*IndentSize), CreateSpaces(elseDirectiveIndents * IndentSize), CreateSpaces(multilineCommentIndents * IndentSize), CreateSpaces(regionIndents * IndentSize));
@@ -58,11 +69,11 @@ namespace TestHelper
         }
 
         /// <summary>
-        /// Creates trivia text which is indented formattedIndents amount
+        /// Creates trivia text which is uniformly indented formattedIndents amount
         /// </summary>
         /// <param name="formattedIndents"></param>
         /// <returns></returns>
-        public static string TriviaText(int formattedIndents = DefaultIndents)
+        public static string TriviaTextUniform(int formattedIndents = DefaultIndents)
         {
             return TriviaTextCustom(formattedIndents, formattedIndents, formattedIndents, formattedIndents);
         }
