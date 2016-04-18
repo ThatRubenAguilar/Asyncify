@@ -55,6 +55,7 @@
     <Compile Include="Helpers\SyntaxFactoryHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RefactorProviders\ExtractAwaitExpressionToVariableRefactorProvider.cs" />
+    <Compile Include="RefactorProviders\MakeContainingMethodSignatureAsyncRefactorProvider.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
