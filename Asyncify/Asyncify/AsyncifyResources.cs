@@ -4,9 +4,12 @@ namespace Asyncify
 {
     internal static class AsyncifyResources
     {
-        public static readonly Regex TaskRegex = new Regex("System.Threading.Tasks.Task");
-        public static readonly Regex TaskGenericRegex = new Regex("System.Threading.Tasks.Task<");
+        public static readonly Regex TaskRegex = new Regex(TaskFullName);
+        public static readonly Regex TaskGenericRegex = new Regex($"{TaskFullName}<");
         public static readonly Regex TaskAwaiterRegex = new Regex("System.Runtime.CompilerServices.TaskAwaiter");
+
+        public const string TaskFullName = "System.Threading.Tasks.Task";
+        public const string TaskNamespace = "System.Threading.Tasks";
 
         public const string ResultProperty = "Result";
         public const string GetResultMethod = "GetResult";

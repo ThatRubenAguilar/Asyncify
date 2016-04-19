@@ -23,7 +23,7 @@ namespace Asyncify.Test
             var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
 
             var fixTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, fixedExpression);
-            VerifyCSharpRefactoring(testTaskClass, expected, fixTaskClass, new[] { TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass }, allowNewCompilerDiagnostics);
+            VerifyCSharpRefactoring(testTaskClass, expected, fixTaskClass, TestSourceCode.SupportingSources, allowNewCompilerDiagnostics);
         }
 
         protected ResultLocation ExpectedResultLocation(string testExpression, string refactoringTargetCode)

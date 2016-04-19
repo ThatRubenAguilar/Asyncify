@@ -122,7 +122,56 @@ namespace TestHelper
         {
             return new TaskChild<AsyncMemberMethods>();
         }
+
+        public static TaskChild<Different.AsyncMemberMethods> GetDifferentMemberMethods()
+        {
+            return new TaskChild<Different.AsyncMemberMethods>();
+        }
     }
+";
+        public static readonly string TaskNamespacedStaticClass = @"
+    using System;
+    using System.Threading.Tasks;
+
+namespace Different
+{
+    class AsyncMemberMethods
+    {
+        public AsyncMemberMethods Field1 = null;
+        public AsyncMemberMethods Property1 => null;
+        public Task Result = null;
+
+        public TaskAwaiter<AsyncMemberMethods> GetAwaiter() 
+        {
+            return null;
+        }
+        
+        public AsyncMemberMethods GetResult() 
+        {
+            return null;
+        }
+
+        public void Wait() 
+        {
+
+        }
+
+        public TaskChild<int> GetNumber()
+        {
+            return new TaskChild<int>();
+        }
+
+        public TaskChild PerformProcessing()
+        {
+            return new TaskChild();
+        }
+        
+        public TaskChild<AsyncMemberMethods> GetMemberMethods()
+        {
+            return new TaskChild<AsyncMemberMethods>();
+        }
+    }
+}
 ";
         public static readonly string TaskMemberClass = @"
     using System;
@@ -164,8 +213,19 @@ namespace TestHelper
             return new TaskChild<AsyncMemberMethods>();
         }
         
-        }
+    }
 ";
+
+        public static readonly string[] SupportingSources =
+        {
+            TaskStaticClass, TaskMemberClass, TaskChildClass,
+            TaskNamespacedStaticClass
+        };
+
+        public static string[] GetCompilationSources(string testSource)
+        {
+            return new[] {testSource}.Concat(SupportingSources).ToArray();
+        }
 
         public static readonly string TaskExpressionWrapper = @"
 using System;

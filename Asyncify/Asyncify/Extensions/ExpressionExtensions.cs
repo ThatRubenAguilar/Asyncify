@@ -107,7 +107,7 @@ namespace Asyncify.Extensions
         /// <param name="varTypeDeclaration">Name of the type of variable to extract to</param>
         /// <param name="varNameToken">Name of the variable</param>
         /// <returns>Local declaration statement syntax with extracted expression.</returns>
-        public static LocalDeclarationStatementSyntax ExtractToLocalVariable(this ExpressionSyntax expr, IdentifierNameSyntax varTypeDeclaration, SyntaxToken varNameToken)
+        public static LocalDeclarationStatementSyntax ExtractToLocalVariable(this ExpressionSyntax expr, TypeSyntax varTypeDeclaration, SyntaxToken varNameToken)
         {
             if (!varNameToken.IsKind(SyntaxKind.IdentifierToken))
                 throw new ArgumentException($"{nameof(varNameToken)} is expected to be {SyntaxKind.IdentifierToken} but was {varNameToken.Kind()}");
@@ -138,7 +138,7 @@ namespace Asyncify.Extensions
         /// <param name="varTypeDeclaration">Name of the type of variable to extract to</param>
         /// <param name="varNameDeclaration">Name of the local variable</param>
         /// <returns>New modified root after extraction</returns>
-        public static SyntaxNode ExtractAwaitExpressionToVariable(this AwaitExpressionSyntax awaitExpr, SyntaxEditor syntaxEditor, SyntaxNode awaitContainingExpr, IdentifierNameSyntax varTypeDeclaration, IdentifierNameSyntax varNameDeclaration)
+        public static SyntaxNode ExtractAwaitExpressionToVariable(this AwaitExpressionSyntax awaitExpr, SyntaxEditor syntaxEditor, SyntaxNode awaitContainingExpr, TypeSyntax varTypeDeclaration, IdentifierNameSyntax varNameDeclaration)
         {
 
             LocalDeclarationStatementSyntax extractedAwaitDeclaration = awaitExpr.ExtractToLocalVariable(varTypeDeclaration, varNameDeclaration.Identifier);

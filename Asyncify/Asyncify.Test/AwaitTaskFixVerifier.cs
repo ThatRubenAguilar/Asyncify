@@ -29,19 +29,19 @@ namespace Asyncify.Test
             string fixedExpression, bool allowNewCompilerDiagnostics = false)
         {
             var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(new[] {testTaskClass, TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass }, expected);
+            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass), expected);
 
             var fixTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, fixedExpression);
-            VerifyCSharpFix(testTaskClass, fixTaskClass, new[] {TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass }, allowNewCompilerDiagnostics, expected);
+            VerifyCSharpFix(testTaskClass, fixTaskClass, TestSourceCode.SupportingSources, allowNewCompilerDiagnostics, expected);
         }
         protected void AwaitTaskDiagnosticsAndFix(string testExpression, DiagnosticResult[] expected,
             string fixedExpression, bool allowNewCompilerDiagnostics = false)
         {
             var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(new[] {testTaskClass, TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass }, expected);
+            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass), expected);
 
             var fixTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, fixedExpression);
-            VerifyCSharpFix(testTaskClass, fixTaskClass, new[] {TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass }, allowNewCompilerDiagnostics);
+            VerifyCSharpFix(testTaskClass, fixTaskClass, TestSourceCode.SupportingSources, allowNewCompilerDiagnostics);
         }
 
 

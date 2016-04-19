@@ -47,7 +47,7 @@ namespace Asyncify.Test
             var testExpression = @"(new AsyncMemberMethods()).Wait();";
 
             var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(new[] { testTaskClass, TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass });
+            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass));
         }
 
         [TestMethod, TestCategory("Remove.Task.Wait()")]
@@ -59,7 +59,7 @@ namespace Asyncify.Test
 
             var expected = AwaitTaskExpectedResult(testExpression, AsyncifyRules.AwaitTaskWaitRule, "Wait()", "AsyncMethods.PerformProcessing()");
 
-            VerifyCSharpDiagnostic(new[] { testTaskClass, TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass }, expected);
+            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass), expected);
         }
 
 

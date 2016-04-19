@@ -35,6 +35,23 @@ namespace Asyncify.Test
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
         }
         [TestMethod, TestCategory("Extract_Await")]
+        public void Should_extract_await_in_block_code_for_generic_task_with_type_in_different_namespace()
+        {
+            var testExpression = @"
+        {
+            var t = (await AsyncMethods.GetDifferentMemberMethods()).Field1;
+        }
+";
+            var fixExpression = @"
+        {
+            Different.AsyncMemberMethods taskResult = await AsyncMethods.GetDifferentMemberMethods();
+            var t = (taskResult).Field1;
+        }
+";
+            var expected = ExpectedResultLocation(testExpression, "await");
+            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+        }
+        [TestMethod, TestCategory("Extract_Await")]
         public void Should_not_extract_await_in_block_code_when_generic_task_not_awaited()
         {
             var testExpression = @"
@@ -109,6 +126,25 @@ namespace Asyncify.Test
         Func<Task<AsyncMemberMethods>> lambda = async () =>
         {
             AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
+            return (taskResult).Field1;
+        };
+";
+            var expected = ExpectedResultLocation(testExpression, "await");
+            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+        }
+        [TestMethod, TestCategory("Extract_Await")]
+        public void Should_extract_await_in_lambda_block_code_for_generic_task_with_type_in_different_namespace()
+        {
+            var testExpression = @"
+        Func<Task<AsyncMemberMethods>> lambda = async () =>
+        {
+            return (await AsyncMethods.GetDifferentMemberMethods()).Field1;
+        };
+";
+            var fixExpression = @"
+        Func<Task<AsyncMemberMethods>> lambda = async () =>
+        {
+            Different.AsyncMemberMethods taskResult = await AsyncMethods.GetDifferentMemberMethods();
             return (taskResult).Field1;
         };
 ";
@@ -218,6 +254,22 @@ Action lambda = async () =>
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
         }
+        [TestMethod, TestCategory("Extract_Await")]
+        public void Should_extract_await_in_lambda_single_line_for_generic_task_with_type_in_different_namespace()
+        {
+            var testExpression = @"
+        Func<Task<AsyncMemberMethods>> lambda = async () => (await AsyncMethods.GetDifferentMemberMethods()).Field1;
+";
+            var fixExpression = @"
+        Func<Task<AsyncMemberMethods>> lambda = async () =>
+        {
+            Different.AsyncMemberMethods taskResult = await AsyncMethods.GetDifferentMemberMethods();
+            return (taskResult).Field1;
+        };
+";
+            var expected = ExpectedResultLocation(testExpression, "await");
+            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+        }
         
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_not_extract_await_in_lambda_single_line_when_generic_task_not_awaited()
@@ -292,7 +344,7 @@ Action lambda = async () => await AsyncMethods.PerformProcessing();
         #endregion Lambda Single Line
 
         /*
-        TODO: see how it handles types that are not included in the namespace.
+        TODO: see how it handles types that are not included in the namespace, use simplifier/include using, also add 2 deep namespace tests
         TODO: Pipe async definition up 1
     */
     }

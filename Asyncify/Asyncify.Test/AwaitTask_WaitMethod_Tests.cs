@@ -51,7 +51,7 @@ AsyncMethods.PerformProcessing().Wait();";
             var testExpression = @"(new AsyncMemberMethods()).Wait();";
 
             var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(new[] { testTaskClass, TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass });
+            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass));
         }
 
         [TestMethod, TestCategory("Await.Task.Wait()")]
@@ -63,7 +63,7 @@ AsyncMethods.PerformProcessing().Wait();";
 
             var expected = AwaitTaskExpectedResult(testExpression, AsyncifyRules.RemoveGenericTaskWaitRule, "Wait()", "AsyncMethods.GetNumber()");
 
-            VerifyCSharpDiagnostic(new[] { testTaskClass, TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass }, expected);
+            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass), expected);
         }
 
 

@@ -9,7 +9,7 @@ namespace Asyncify.Contexts
     class VariableSemanticContext : SemanticContext, IVariableSemanticContext
     {
 
-        public VariableSemanticContext(IdentifierNameSyntax variableTypeDeclaration, IdentifierNameSyntax variableNameDeclaration, SemanticModel model) : base(model)
+        public VariableSemanticContext(TypeSyntax variableTypeDeclaration, IdentifierNameSyntax variableNameDeclaration, SemanticModel model) : base(model)
         {
             if (variableTypeDeclaration == null) throw new ArgumentNullException(nameof(variableTypeDeclaration));
             if (variableNameDeclaration == null) throw new ArgumentNullException(nameof(variableNameDeclaration));
@@ -19,7 +19,7 @@ namespace Asyncify.Contexts
         /// <summary>
         /// Declaration of the variable type, e.g. var or Task&lt;int&gt;
         /// </summary>
-        public IdentifierNameSyntax VariableTypeDeclaration { get; set; }
+        public TypeSyntax VariableTypeDeclaration { get; set; }
         /// <summary>
         /// Declaration of the variable name
         /// </summary>
@@ -36,10 +36,10 @@ namespace Asyncify.Contexts
         public static VariableSemanticContext CreateForLocalVariable(ExpressionSyntax expressionLocation, ITypeSymbol variableType, string variableName, SemanticModel semanticModel)
         {
             var defaultVarName = expressionLocation.GenerateDefaultUnusedLocalVariableName(variableName, semanticModel);
-
+            
             var minimalTypeString = variableType.ToMinimalDisplayString(semanticModel,
                 expressionLocation.SpanStart);
-            var varTypeDeclaration = SyntaxFactory.IdentifierName(minimalTypeString);
+            var varTypeDeclaration = NodeExtensions.CreateTypeSyntax(minimalTypeString);
             var varNameDeclaration = SyntaxFactory.IdentifierName(defaultVarName);
             return new VariableSemanticContext(varTypeDeclaration, varNameDeclaration, semanticModel);
         }
@@ -47,7 +47,7 @@ namespace Asyncify.Contexts
 
     interface IVariableSemanticContext : ISemanticContext
     {
-        IdentifierNameSyntax VariableTypeDeclaration { get; }
+        TypeSyntax VariableTypeDeclaration { get; }
         IdentifierNameSyntax VariableNameDeclaration { get; }
     }
 }

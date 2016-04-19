@@ -61,7 +61,7 @@ namespace Asyncify.Test
             var testExpression = @"var val = (new AsyncMemberMethods()).GetAwaiter().GetResult();";
 
             var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(new[] { testTaskClass, TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass });
+            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass));
         }
 
         [TestMethod, TestCategory("Await.Task.GetAwaiter().GetResult()")]
@@ -71,7 +71,7 @@ namespace Asyncify.Test
 var val = awaiter.GetResult();";
 
             var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(new[] { testTaskClass, TestSourceCode.TaskStaticClass, TestSourceCode.TaskMemberClass, TestSourceCode.TaskChildClass });
+            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass));
         }
         [TestMethod, TestCategory("Await.Task.GetAwaiter().GetResult()")]
         public void Should_not_add_parenthesis_to_await_task_fix_on_generic_task_getresult_method_when_return_value_not_used()

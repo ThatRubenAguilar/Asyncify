@@ -1,3 +1,4 @@
+using System;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,7 +7,9 @@ using Asyncify.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Simplification;
 
 namespace Asyncify.RefactorProviders
 {
@@ -23,7 +26,7 @@ namespace Asyncify.RefactorProviders
             // Find the node at the selection.
             var node = root.FindNode(context.Span);
 
-            // Only offer a refactoring if the selected node is a await expression.
+            // Only offer a refactoring if the selected node is a method syntax.
             var methodSyntax = node as MethodDeclarationSyntax;
             if (methodSyntax == null)
             {
@@ -36,6 +39,50 @@ namespace Asyncify.RefactorProviders
         private async Task AnalyzeMakeMethodAsync(SyntaxNode root, CodeRefactoringContext context, MethodDeclarationSyntax methodSyntax)
         {
 
+            // Check if await expression exists already
+            var awaitExprList = methodSyntax.DescendantNodes().OfType<AwaitExpressionSyntax>().ToList();
+            // TODO: May lax this in lieu of wrapping return values in Task
+            if (awaitExprList.Count == 0)
+                return;
+
+            // Ensure all await expressions are not within a lambda
+            awaitExprList.RemoveAll(n => n.ContainedWithin<LambdaExpressionSyntax>(methodSyntax));
+            if (awaitExprList.Count == 0)
+                return;
+
+            // Check if method async, dont touch already async code
+            var semanticModel =
+                await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
+            
+            var methodSymbol = semanticModel.GetDeclaredSymbol<IMethodSymbol>(methodSyntax, context.CancellationToken);
+            if (methodSymbol == null)
+                return;
+
+            if (methodSymbol.IsAsync)
+                return;
+
+            // Check if return value is task, means we already have working non async task function
+            if (!methodSymbol.ReturnsVoid && AsyncifyResources.TaskRegex.IsMatch(methodSymbol.ReturnType.ToString()))
+                return;
+            
+            var action = CodeAction.Create(title, c =>
+            {
+                var methodAsyncContext = new MakeMethodAsyncContext(new DocumentContext(root, context.Document, c))
+                {
+                    OriginalMethodDeclaration = methodSyntax,
+                    MethodSymbol = methodSymbol,
+                    AwaitInMethodFlow = awaitExprList.Count != 0
+                };
+                return MakeMethodAsync(methodAsyncContext);
+            });
+
+            context.RegisterRefactoring(action);
+            
+
+        }
+
+        private async Task<Document> MakeMethodAsync(MakeMethodAsyncContext methodAsyncContext)
+        {
             /*
                 Open ?: Do we want to split Task only/async included refactorings?
                 Do we want to combine lambda logic with method declaration logic?
@@ -49,45 +96,34 @@ namespace Asyncify.RefactorProviders
                 import using Task if not existing.
             */
 
-            // Check if await expression exists already
-            var awaitExprList = methodSyntax.DescendantNodes().OfType<AwaitExpressionSyntax>().ToList();
-            if (awaitExprList.Count == 0)
-                return;
-
-            // Ensure all await expressions are not within a lambda
-            awaitExprList.RemoveAll(n => n.ContainedWithin<LambdaExpressionSyntax>(methodSyntax));
-            if (awaitExprList.Count == 0)
-                return;
-
-            // Check if method async, dont touch already async code
-            var semanticModel =
-                await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
-            
-            var methodSymbol = semanticModel.GetSymbol<IMethodSymbol>(methodSyntax, context.CancellationToken);
-            if (methodSymbol == null)
-                return;
-
-            if (methodSymbol.IsAsync)
-                return;
-
-            // Check if return value is task, means we already have working non async task function
-            if (!methodSymbol.ReturnsVoid && AsyncifyResources.TaskRegex.IsMatch(methodSymbol.ReturnType.ToString()))
-                return;
-            
-            var action = CodeAction.Create(title, c =>
+            // TODO: Implement for nonvoid methods
+            if (methodAsyncContext.MethodSymbol.ReturnsVoid)
             {
-                var refactorContext = new MakeMethodAsyncContext(new DocumentContext(root, context.Document, c))
+                var methodNode = methodAsyncContext.OriginalMethodDeclaration;
+                if (methodAsyncContext.AwaitInMethodFlow && !methodAsyncContext.MethodSymbol.IsAsync)
                 {
-                    OriginalMethodDeclaration = null
-                };
-                return context.Document.AsTask();
-            });
+                    var asyncToken = SyntaxFactory.Token(SyntaxKind.AsyncKeyword);
+                    var taskToken = NodeExtensions.CreateTypeSyntax(AsyncifyResources.TaskFullName);
+                    taskToken = taskToken.WithAdditionalAnnotations(Simplifier.Annotation);
 
-            // TODO: Implement 
-            context.RegisterRefactoring(action);
-            
+                    var newAsyncMethodNode = methodNode.AddModifiers(asyncToken);
+                    newAsyncMethodNode = newAsyncMethodNode.WithReturnType(taskToken);
 
+                    var syntaxEditor = methodAsyncContext.DocumentContext.CreateSyntaxEditor();
+                    syntaxEditor.ReplaceNode(methodNode, newAsyncMethodNode);
+                    var newRoot = syntaxEditor.GetChangedRoot() as CompilationUnitSyntax;
+                    if (newRoot == null)
+                        return methodAsyncContext.DocumentContext.Document;
+
+                    var finalRoot = newRoot.AddUsingIfNotPresent(AsyncifyResources.TaskNamespace);
+
+                    return methodAsyncContext.DocumentContext.Document.WithSyntaxRoot(finalRoot);
+                }
+            }
+
+            return methodAsyncContext.DocumentContext.Document;
         }
+
         class MakeMethodAsyncContext : RefactoringContext<DocumentContext, SemanticContext>
         {
             public MakeMethodAsyncContext(DocumentContext documentContext) : base(documentContext, null)
@@ -98,6 +134,15 @@ namespace Asyncify.RefactorProviders
             /// Method declaration node to be replaced.
             /// </summary>
             public MethodDeclarationSyntax OriginalMethodDeclaration { get; set; }
+
+            /// <summary>
+            /// Method symbol for OriginalMethodDeclaration
+            /// </summary>
+            public IMethodSymbol MethodSymbol { get; set; }
+            /// <summary>
+            /// Whether an await exists in the method flow or not
+            /// </summary>
+            public bool AwaitInMethodFlow { get; set; }
         }
 
 

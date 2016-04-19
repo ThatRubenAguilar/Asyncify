@@ -433,6 +433,23 @@ namespace Asyncify.Extensions
             return node.ContainedWithinNodeOrDefault<T>(ancestorStopNode) != null;
         }
 
-        
+        public static TypeSyntax CreateTypeSyntax(string typeName)
+        {
+            var parts = typeName.Split('.');
+            if (parts.Length == 0)
+                throw new ArgumentOutOfRangeException(nameof(typeName), $"'{typeName}' failed to provide any parts from splitting on '.'");
+            if (parts.Length == 1)
+                return SyntaxFactory.IdentifierName(parts[0]);
+
+            var leftIdentifier = SyntaxFactory.IdentifierName(parts[0]);
+            var rightIdentifier = SyntaxFactory.IdentifierName(parts[1]);
+            var qualifiedName = SyntaxFactory.QualifiedName(leftIdentifier, rightIdentifier);
+            for (int i = 2; i < parts.Length; i++)
+            {
+                rightIdentifier = SyntaxFactory.IdentifierName(parts[i]);
+                qualifiedName = SyntaxFactory.QualifiedName(qualifiedName, rightIdentifier);
+            }
+            return qualifiedName;
+        }
     }
 }
