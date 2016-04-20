@@ -1,3 +1,4 @@
+using System.Linq;
 using Asyncify.RefactorProviders;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestHelper;
@@ -33,6 +34,33 @@ namespace Asyncify.Test
 ";
             var expected = ExpectedResultLocation(testExpression, "await");
             AwaitTaskRefactoring(testExpression, expected, fixExpression);
+        }
+        [TestMethod, TestCategory("Extract_Await")]
+        public void Should_extract_correct_await_in_double_await_in_block_code_for_generic_task()
+        {
+            var testExpression = @"
+        {
+            Task<Task<AsyncMemberMethods>> doubleAwait = Task.FromResult(Task.FromResult(new AsyncMemberMethods()));
+            var t = (await await doubleAwait).Field1;
+        }
+";
+            var fixOuterExpression = @"
+        {
+            Task<Task<AsyncMemberMethods>> doubleAwait = Task.FromResult(Task.FromResult(new AsyncMemberMethods()));
+            AsyncMemberMethods taskResult = await await doubleAwait;
+            var t = (taskResult).Field1;
+        }
+";
+            var fixInnerExpression = @"
+        {
+            Task<Task<AsyncMemberMethods>> doubleAwait = Task.FromResult(Task.FromResult(new AsyncMemberMethods()));
+            Task<AsyncMemberMethods> taskResult = await doubleAwait;
+            var t = (await taskResult).Field1;
+        }
+";
+            var expected = ExpectedResultLocations(testExpression, "await").ToArray();
+            AwaitTaskRefactoring(testExpression, expected[0], fixOuterExpression, true);
+            AwaitTaskRefactoring(testExpression, expected[1], fixInnerExpression, true);
         }
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_extract_await_in_block_code_for_generic_task_with_type_in_different_namespace()
@@ -346,6 +374,7 @@ Action lambda = async () => await AsyncMethods.PerformProcessing();
         /*
         TODO: see how it handles types that are not included in the namespace, use simplifier/include using, also add 2 deep namespace tests
         TODO: Pipe async definition up 1
+        TODO: CS4033 fix with async Task instead of void
     */
     }
 }

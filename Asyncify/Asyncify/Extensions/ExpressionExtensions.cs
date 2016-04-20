@@ -94,6 +94,15 @@ namespace Asyncify.Extensions
         {
             var callerSymbol = model.GetAwaitExpressionInfo(awaitExpr);
 
+            if (callerSymbol.GetResultMethod == null)
+            {
+                if (!callerSymbol.IsDynamic)
+                    return null;
+
+                // TODO: Can try to unwrap situations such as await await ... task in non async methods and rebuild the output type from wrapping various layers deep.
+                return null;
+            }
+
             if (callerSymbol.GetResultMethod.ReturnsVoid)
                 return null;
             

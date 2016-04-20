@@ -42,6 +42,7 @@ namespace TestHelper
         /// <param name="language">The language the source code is in</param>
         /// <param name="refactoringProvider">Refactoring to apply to sources</param>
         /// <param name="oldSource">A class in the form of a string before the CodeFix was applied to it</param>
+        /// <param name="expected">Result expected to be fixed and found</param>
         /// <param name="newSource">A class in the form of a string after the CodeFix was applied to it</param>
         /// <param name="supportingSources">Classes in the form of strings which support the oldSource</param>
         /// <param name="allowNewCompilerDiagnostics">A bool controlling whether or not the test will fail if the CodeFix introduces other warnings after being applied</param>
