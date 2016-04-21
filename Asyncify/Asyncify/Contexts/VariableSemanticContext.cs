@@ -39,7 +39,7 @@ namespace Asyncify.Contexts
             
             var minimalTypeString = variableType.ToMinimalDisplayString(semanticModel,
                 expressionLocation.SpanStart);
-            var varTypeDeclaration = NodeExtensions.CreateTypeSyntax(minimalTypeString);
+            var varTypeDeclaration = TypeFactory.CreateTypeSyntax(minimalTypeString);
             var varNameDeclaration = SyntaxFactory.IdentifierName(defaultVarName);
             return new VariableSemanticContext(varTypeDeclaration, varNameDeclaration, semanticModel);
         }

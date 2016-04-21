@@ -102,7 +102,7 @@ namespace Asyncify.RefactorProviders
                 var asyncToken = SyntaxFactory.Token(SyntaxKind.AsyncKeyword);
                 if (methodAsyncContext.MethodSymbol.ReturnsVoid)
                 {
-                    var taskToken = NodeExtensions.CreateTypeSyntax(AsyncifyResources.TaskFullName);
+                    var taskToken = TypeFactory.CreateTypeSyntax(AsyncifyResources.TaskFullName);
                     taskToken = taskToken.WithAdditionalAnnotations(Simplifier.Annotation);
 
                     var newAsyncMethodNode = methodNode.AddModifiers(asyncToken);
@@ -123,7 +123,7 @@ namespace Asyncify.RefactorProviders
                 {
                     // TODO: Implement for nonvoid methods
 
-                    var taskToken = NodeExtensions.CreateTypeSyntax(AsyncifyResources.TaskFullName);
+                    var taskToken = TypeFactory.CreateTypeSyntax(AsyncifyResources.TaskFullName);
                     taskToken = taskToken.WithAdditionalAnnotations(Simplifier.Annotation);
 
                     var newAsyncMethodNode = methodNode.AddModifiers(asyncToken);

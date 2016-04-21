@@ -112,6 +112,7 @@
     <Compile Include="Helpers\ResultLocation.cs" />
     <Compile Include="Helpers\TestSourceCode.cs" />
     <Compile Include="RemoveTask_WaitMethod_Tests.cs" />
+    <Compile Include="TypeFactory_Tests.cs" />
     <Compile Include="Verifiers\CodeFixVerifier.cs" />
     <Compile Include="Verifiers\DiagnosticVerifier.cs" />
     <Compile Include="Helpers\CodeFixVerifier.Helper.cs" />

@@ -442,46 +442,7 @@ namespace Asyncify.Extensions
         {
             return node.ContainedWithinNodeOrDefault<T>() != null;
         }
+        
 
-        public static TypeSyntax CreateTypeSyntax(string typeName)
-        {
-            var parts = typeName.Split('.', '+');
-            if (parts.Length == 0)
-                throw new ArgumentOutOfRangeException(nameof(typeName), $"'{typeName}' failed to provide any parts from splitting on '.'");
-            if (parts.Length == 1)
-            {
-                return SyntaxFactory.IdentifierName(parts[0]);
-            }
-
-            var leftIdentifier = SyntaxFactory.IdentifierName(parts[0]);
-            var rightIdentifier = SyntaxFactory.IdentifierName(parts[1]);
-            var qualifiedName = SyntaxFactory.QualifiedName(leftIdentifier, rightIdentifier);
-            for (int i = 2; i < parts.Length; i++)
-            {
-                rightIdentifier = SyntaxFactory.IdentifierName(parts[i]);
-                qualifiedName = SyntaxFactory.QualifiedName(qualifiedName, rightIdentifier);
-            }
-            return qualifiedName;
-        }
-
-        public static TypeSyntax CreateFullTypeSyntax(string typeName)
-        {
-            var genericParts = typeName.Split('<', '>');
-            if (genericParts.Length == 0)
-                throw new ArgumentOutOfRangeException(nameof(typeName), $"'{typeName}' failed to provide any parts from splitting on '<' and '>'");
-            // Not 100% error case but effective enough as this is used with hard coded values or type symbols.
-            if (genericParts.Length % 2 == 1)
-                throw new ArgumentOutOfRangeException(nameof(typeName), $"'{typeName}' has an unbalanced '<' and '>'");
-
-            if (genericParts.Length == 1)
-                return CreateTypeSyntax(genericParts[0]);
-
-        }
-
-        static TypeArgumentListSyntax CreateTypeSyntaxList(string enclosedGenericTypes)
-        {
-            var typeParts = enclosedGenericTypes.Split(',');
-            // TODO: Walk down tree and create types as needed, use recursion, also add a simplifier tag by default
-        }
     }
 }
