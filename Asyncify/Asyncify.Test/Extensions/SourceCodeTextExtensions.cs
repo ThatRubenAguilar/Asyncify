@@ -118,11 +118,11 @@ namespace Asyncify.Test.Extensions
         public static IList<int> FindNewLineEndingLocations(this string input, int stopIndex = -1)
         {
             if (stopIndex < 0)
-                return FineAllNewLineEndlingLocations(input);
-            return FineNewLineEndlingLocationsUntilIndex(input, stopIndex);
+                return FindAllNewLineEndlingLocations(input);
+            return FindNewLineEndlingLocationsUntilIndex(input, stopIndex);
         }
 
-        private static IList<int> FineNewLineEndlingLocationsUntilIndex(string input, int stopIndex)
+        private static IList<int> FindNewLineEndlingLocationsUntilIndex(string input, int stopIndex)
         {
             var newLineLocationList = new List<int>();
             if (NewLineCharArray.Length > 1)
@@ -156,7 +156,7 @@ namespace Asyncify.Test.Extensions
             }
             return newLineLocationList;
         }
-        private static IList<int> FineAllNewLineEndlingLocations(string input)
+        private static IList<int> FindAllNewLineEndlingLocations(string input)
         {
             var newLineLocationList = new List<int>();
             if (NewLineCharArray.Length > 1)

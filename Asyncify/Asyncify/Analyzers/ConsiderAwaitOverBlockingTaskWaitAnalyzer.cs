@@ -54,6 +54,19 @@ namespace Asyncify.Analyzers
             {
                 return;
             }
+            // IDEA: In C# <6.0 await is also not allowed in catch/finally blocks, could filter for that once we figure out which version VS solution is targetting, see: http://stackoverflow.com/questions/247621/what-are-the-correct-version-numbers-for-c/247623#247623 and http://csharpindepth.com/Articles/Chapter1/Versions.aspx and potential solution http://geekswithblogs.net/lorint/archive/2006/01/30/67654.aspx
+            // Not within lock or unsafe context
+            if (identifierNameSyntax.ContainedWithin<LockStatementSyntax>() || identifierNameSyntax.ContainedWithin<UnsafeStatementSyntax>())
+            {
+                return;
+            }
+
+            var containingMethod = identifierNameSyntax.ContainedWithinNodeOrDefault<MethodDeclarationSyntax>();
+            // Containing method does not have ref or out params or method has unsafe context
+            if (containingMethod != null && (containingMethod.ContainsParameterModifiers(SyntaxKind.RefKeyword, SyntaxKind.OutKeyword) || containingMethod.Modifiers.Any(m => m.IsKind(SyntaxKind.UnsafeKeyword))))
+            {
+                return;
+            }
 
             var waitInvoker = identifierNameSyntax.Parent.ChildNodes().First();
 

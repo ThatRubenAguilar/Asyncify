@@ -9,6 +9,7 @@ using TestHelper;
 
 namespace Asyncify.Test
 {
+    // TODO: Add lock/unsafe/out/ref tests
     [TestClass]
     public class AwaitTask_WaitMethod_Tests :
         AwaitTaskFixVerifier

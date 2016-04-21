@@ -96,13 +96,33 @@ namespace Asyncify.RefactorProviders
                 import using Task if not existing.
             */
 
-            // TODO: Implement for nonvoid methods
-            if (methodAsyncContext.MethodSymbol.ReturnsVoid)
+            var methodNode = methodAsyncContext.OriginalMethodDeclaration;
+            if (methodAsyncContext.AwaitInMethodFlow && !methodAsyncContext.MethodSymbol.IsAsync)
             {
-                var methodNode = methodAsyncContext.OriginalMethodDeclaration;
-                if (methodAsyncContext.AwaitInMethodFlow && !methodAsyncContext.MethodSymbol.IsAsync)
+                var asyncToken = SyntaxFactory.Token(SyntaxKind.AsyncKeyword);
+                if (methodAsyncContext.MethodSymbol.ReturnsVoid)
                 {
-                    var asyncToken = SyntaxFactory.Token(SyntaxKind.AsyncKeyword);
+                    var taskToken = NodeExtensions.CreateTypeSyntax(AsyncifyResources.TaskFullName);
+                    taskToken = taskToken.WithAdditionalAnnotations(Simplifier.Annotation);
+
+                    var newAsyncMethodNode = methodNode.AddModifiers(asyncToken);
+                    newAsyncMethodNode = newAsyncMethodNode.WithReturnType(taskToken);
+
+                    var syntaxEditor = methodAsyncContext.DocumentContext.CreateSyntaxEditor();
+                    syntaxEditor.ReplaceNode(methodNode, newAsyncMethodNode);
+                    var newRoot = syntaxEditor.GetChangedRoot() as CompilationUnitSyntax;
+                    if (newRoot == null)
+                        return methodAsyncContext.DocumentContext.Document;
+
+                    var finalRoot = newRoot.AddUsingIfNotPresent(AsyncifyResources.TaskNamespace);
+
+                    return methodAsyncContext.DocumentContext.Document.WithSyntaxRoot(finalRoot);
+
+                }
+                else
+                {
+                    // TODO: Implement for nonvoid methods
+
                     var taskToken = NodeExtensions.CreateTypeSyntax(AsyncifyResources.TaskFullName);
                     taskToken = taskToken.WithAdditionalAnnotations(Simplifier.Annotation);
 

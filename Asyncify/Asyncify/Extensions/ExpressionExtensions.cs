@@ -98,7 +98,7 @@ namespace Asyncify.Extensions
             {
                 if (!callerSymbol.IsDynamic)
                     return null;
-
+                // IDEA: Other alternative is to force add async to method and get new semantic model if it doesnt have ref/out or unsafe contexts.
                 // TODO: Can try to unwrap situations such as await await ... task in non async methods and rebuild the output type from wrapping various layers deep.
                 return null;
             }
@@ -221,7 +221,11 @@ namespace Asyncify.Extensions
         {
             return lambda.ChildNodes().FirstOrDefault(n => n is BlockSyntax || n is ExpressionSyntax);
         }
-
+        /// <summary>
+        /// Retrieves information about a lambda expression's body
+        /// </summary>
+        /// <param name="lambda"></param>
+        /// <returns></returns>
         public static LambdaBodyInfo GetLambdaBodyInfo(this LambdaExpressionSyntax lambda)
         {
             var lambdaBody = lambda.GetLambdaBody();
@@ -237,6 +241,19 @@ namespace Asyncify.Extensions
                 return new LambdaBodyInfo(expressionBody, lambda);
 
             return null;
+        }
+
+        /// <summary>
+        /// Determines whether a method syntax contains any of the parameter modifiers
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="modifiers"></param>
+        /// <returns></returns>
+        public static bool ContainsParameterModifiers(this MethodDeclarationSyntax node, params SyntaxKind[] modifiers)
+        {
+            return node.ParameterList?.Parameters.FirstOrDefault(n =>
+                !n.Modifiers.FirstOrDefault(t => modifiers.Any(m => t.IsKind(m))).IsDefault()
+                ) != null;
         }
     }
 }

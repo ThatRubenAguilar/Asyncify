@@ -420,6 +420,11 @@ namespace Asyncify.Extensions
                 return containingNode;
             return null;
         }
+        public static T ContainedWithinNodeOrDefault<T>(this SyntaxNode node)
+            where T : SyntaxNode
+        {
+            return node.Ancestors().OfType<T>().FirstOrDefault();
+        }
         /// <summary>
         /// Determines if a node of type T is within exclusive of node to inclusive of ancestorStopNode
         /// </summary>
@@ -432,14 +437,21 @@ namespace Asyncify.Extensions
         {
             return node.ContainedWithinNodeOrDefault<T>(ancestorStopNode) != null;
         }
+        public static bool ContainedWithin<T>(this SyntaxNode node)
+            where T : SyntaxNode
+        {
+            return node.ContainedWithinNodeOrDefault<T>() != null;
+        }
 
         public static TypeSyntax CreateTypeSyntax(string typeName)
         {
-            var parts = typeName.Split('.');
+            var parts = typeName.Split('.', '+');
             if (parts.Length == 0)
                 throw new ArgumentOutOfRangeException(nameof(typeName), $"'{typeName}' failed to provide any parts from splitting on '.'");
             if (parts.Length == 1)
+            {
                 return SyntaxFactory.IdentifierName(parts[0]);
+            }
 
             var leftIdentifier = SyntaxFactory.IdentifierName(parts[0]);
             var rightIdentifier = SyntaxFactory.IdentifierName(parts[1]);
@@ -450,6 +462,26 @@ namespace Asyncify.Extensions
                 qualifiedName = SyntaxFactory.QualifiedName(qualifiedName, rightIdentifier);
             }
             return qualifiedName;
+        }
+
+        public static TypeSyntax CreateFullTypeSyntax(string typeName)
+        {
+            var genericParts = typeName.Split('<', '>');
+            if (genericParts.Length == 0)
+                throw new ArgumentOutOfRangeException(nameof(typeName), $"'{typeName}' failed to provide any parts from splitting on '<' and '>'");
+            // Not 100% error case but effective enough as this is used with hard coded values or type symbols.
+            if (genericParts.Length % 2 == 1)
+                throw new ArgumentOutOfRangeException(nameof(typeName), $"'{typeName}' has an unbalanced '<' and '>'");
+
+            if (genericParts.Length == 1)
+                return CreateTypeSyntax(genericParts[0]);
+
+        }
+
+        static TypeArgumentListSyntax CreateTypeSyntaxList(string enclosedGenericTypes)
+        {
+            var typeParts = enclosedGenericTypes.Split(',');
+            // TODO: Walk down tree and create types as needed, use recursion, also add a simplifier tag by default
         }
     }
 }
