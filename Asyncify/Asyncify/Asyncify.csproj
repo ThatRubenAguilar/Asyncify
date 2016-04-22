@@ -50,6 +50,7 @@
     <Compile Include="Extensions\TaskExtensions.cs" />
     <Compile Include="Extensions\TokenExtensions.cs" />
     <Compile Include="Extensions\TypeFactory.cs" />
+    <Compile Include="Extensions\TypeNameLexer.cs" />
     <Compile Include="FixProviders\ConsiderAwaitOverBlockingTaskGetResultCodeFixProvider.cs" />
     <Compile Include="FixProviders\ConsiderAwaitOverBlockingTaskResultCodeFixProvider.cs" />
     <Compile Include="FixProviders\ConsiderAwaitOverBlockingTaskWaitCodeFixProvider.cs" />

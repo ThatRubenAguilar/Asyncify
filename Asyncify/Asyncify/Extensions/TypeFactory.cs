@@ -12,10 +12,28 @@ namespace Asyncify.Extensions
         /// <summary>
         /// Creates a type syntax from a type string, processing starts at startIndex.
         /// </summary>
-        public static TypeSyntax CreateTypeSyntax(string typeName, int startIndex = 0)
+        public static TypeSyntax CreateTypeSyntax(string typeName, bool segmentInsideGeneric = false, int startIndex = 0)
         {
+            if (startIndex > typeName.Length)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), $"{nameof(startIndex)} was {startIndex} which is longer than {nameof(typeName)}.Length of {typeName.Length}");
             TypeSyntax typeSyntax;
-            CreateTypeSyntax(typeName, startIndex, out typeSyntax);
+            var lexer = new TypeNameLexer(typeName, startIndex, typeName.Length);
+            CreateTypeSyntax(lexer, segmentInsideGeneric, out typeSyntax);
+            return typeSyntax;
+        }
+
+        /// <summary>
+        /// Creates a type syntax from a type string, processing starts at startIndex and continues for length number of characters.
+        /// </summary>
+        public static TypeSyntax CreateTypeSyntax(string typeName, bool segmentInsideGeneric, int startIndex, int length)
+        {
+            if (length + startIndex > typeName.Length)
+                throw new ArgumentOutOfRangeException(nameof(length), $"{nameof(startIndex)} was {startIndex} and {nameof(length)} was {length} which combined is longer than {nameof(typeName)}.Length of {typeName.Length}");
+            if (startIndex > typeName.Length)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), $"{nameof(startIndex)} was {startIndex} which is longer than {nameof(typeName)}.Length of {typeName.Length}");
+            TypeSyntax typeSyntax;
+            var lexer = new TypeNameLexer(typeName, startIndex, length);
+            CreateTypeSyntax(lexer, segmentInsideGeneric, out typeSyntax);
             return typeSyntax;
         }
         /// <summary>
@@ -23,33 +41,50 @@ namespace Asyncify.Extensions
         /// </summary>
         public static TypeArgumentListSyntax CreateGenericTypeArgumentList(string typeName, int startIndex = 0)
         {
+            if (startIndex > typeName.Length)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), $"{nameof(startIndex)} was {startIndex} which is longer than {nameof(typeName)}.Length of {typeName.Length}");
             TypeArgumentListSyntax typeArgumentList;
-            CreateGenericTypeArgumentList(typeName, startIndex, out typeArgumentList);
+            var lexer = new TypeNameLexer(typeName, startIndex, typeName.Length);
+            CreateGenericTypeArgumentList(lexer, out typeArgumentList);
+            return typeArgumentList;
+        }
+        /// <summary>
+        /// Creates a generic type argument list from a string, processing starts at startIndex within the string and continues for length number of characters.
+        /// </summary>
+        public static TypeArgumentListSyntax CreateGenericTypeArgumentList(string typeName, int startIndex, int length)
+        {
+            if (length+startIndex > typeName.Length)
+                throw new ArgumentOutOfRangeException(nameof(length), $"{nameof(startIndex)} was {startIndex} and {nameof(length)} was {length} which combined is longer than {nameof(typeName)}.Length of {typeName.Length}");
+            if (startIndex > typeName.Length)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), $"{nameof(startIndex)} was {startIndex} which is longer than {nameof(typeName)}.Length of {typeName.Length}");
+
+            TypeArgumentListSyntax typeArgumentList;
+            var lexer = new TypeNameLexer(typeName, startIndex, length);
+            CreateGenericTypeArgumentList(lexer, out typeArgumentList);
             return typeArgumentList;
         }
 
         private static readonly char[] TypeTokens = { '.', ',', '<', '>' };
+
         /// <summary>
-        /// Creates a type syntax from a type string, processing starts at startIndex.
+        /// Creates a type syntax from a type string.
         /// </summary>
-        /// <param name="typeName"></param>
-        /// <param name="startIndex"></param>
+        /// <param name="lexer"></param>
+        /// <param name="insideGeneric">Whether the typeName should be treated as if it is within generic type brackets or not.</param>
         /// <param name="fullTypeSyntax"></param>
-        /// <returns>The number of characters processed in the string</returns>
-        static int CreateTypeSyntax(string typeName, int startIndex, out TypeSyntax fullTypeSyntax)
+        /// <returns></returns>
+        static TypeNameLexer CreateTypeSyntax(TypeNameLexer lexer, bool insideGeneric,  out TypeSyntax fullTypeSyntax)
         {
-            var nextTokenIndex = typeName.IndexOfAny(TypeTokens, startIndex);
-            var prevStartIndex = startIndex;
+            lexer.NextToken();
             NameSyntax nameTypeSyntax = null;
-            if (nextTokenIndex == -1)
+            if (!lexer.HasMoreTokens)
             {
-                nameTypeSyntax = SyntaxFactory.IdentifierName(typeName);
+                nameTypeSyntax = SyntaxFactory.IdentifierName(lexer.ProceedingIdentifier);
             }
             else
             {
-                var nextToken = typeName.Substring(nextTokenIndex, 1);
-                var prevIdentifier = typeName.Substring(prevStartIndex, nextTokenIndex - prevStartIndex);
-                prevStartIndex = nextTokenIndex + 1;
+                var nextToken = lexer.Token;
+                var prevIdentifier = lexer.ProceedingIdentifier;
                 switch (nextToken)
                 {
                     case ".":
@@ -57,21 +92,36 @@ namespace Asyncify.Extensions
                         break;
                     case "<":
                         TypeArgumentListSyntax typeParamList;
-                        var searchedLength = CreateGenericTypeArgumentList(typeName, prevStartIndex, out typeParamList);
-                        prevStartIndex += searchedLength;
+                        lexer = CreateGenericTypeArgumentList(lexer, out typeParamList);
                         nameTypeSyntax = SyntaxFactory.GenericName(SyntaxFactory.Identifier(prevIdentifier),
                             typeParamList);
                         break;
+                    case ">":
+                    case ",":
+                        if (insideGeneric)
+                        {
+                            if (string.IsNullOrWhiteSpace(prevIdentifier))
+                            {
+                                fullTypeSyntax = SyntaxFactory.OmittedTypeArgument();
+                                return lexer;
+                            }
+
+                            fullTypeSyntax = SyntaxFactory.IdentifierName(prevIdentifier);
+                            return lexer; 
+                        }
+
+                        lexer.ThrowTokenError();
+                        break;
                     default:
-                        throw new ArgumentException($"Unexpected token '{nextToken}' at index {nextTokenIndex} of type syntax {typeName}");
+                        lexer.ThrowTokenError();
+                        break;
                 }
-                nextTokenIndex = typeName.IndexOfAny(TypeTokens, prevStartIndex);
+                lexer.NextToken();
             }
-            while (nextTokenIndex != -1)
+            while (lexer.HasMoreTokens)
             {
-                var nextToken = typeName.Substring(nextTokenIndex, 1);
-                var prevIdentifier = typeName.Substring(prevStartIndex, nextTokenIndex - prevStartIndex);
-                prevStartIndex = nextTokenIndex + 1;
+                var nextToken = lexer.Token;
+                var prevIdentifier = lexer.ProceedingIdentifier;
 
                 switch (nextToken)
                 {
@@ -80,75 +130,69 @@ namespace Asyncify.Extensions
                         break;
                     case "<":
                         TypeArgumentListSyntax typeParamList;
-                        var searchedLength = CreateGenericTypeArgumentList(typeName, prevStartIndex, out typeParamList);
-                        prevStartIndex += searchedLength;
+                        lexer = CreateGenericTypeArgumentList(lexer, out typeParamList);
                         nameTypeSyntax = SyntaxFactory.GenericName(SyntaxFactory.Identifier(prevIdentifier),
                             typeParamList);
                         break;
                     case ">":
-                        fullTypeSyntax = nameTypeSyntax;
-                        return prevStartIndex;
+                    case ",":
+                        if (insideGeneric)
+                        {
+                            if (string.IsNullOrWhiteSpace(prevIdentifier))
+                            {
+                                lexer.ThrowIdentifierError();
+                            }
+
+                            fullTypeSyntax = nameTypeSyntax;
+                            return lexer;
+                        }
+
+                        lexer.ThrowTokenError();
+                        break;
                     default:
-                        throw new ArgumentException($"Unexpected token '{nextToken}' at index {nextTokenIndex} of type syntax {typeName}");
+                        lexer.ThrowTokenError();
+                        break;
                 }
 
-                nextTokenIndex = typeName.IndexOfAny(TypeTokens, prevStartIndex);
+                lexer.NextToken();
             }
             fullTypeSyntax = nameTypeSyntax;
-            return typeName.Length - startIndex;
+            return lexer;
         }
-        /// <summary>
-        /// Creates a generic type argument list from a string, processing starts at startIndex within the string
-        /// </summary>
-        /// <param name="typeName"></param>
-        /// <param name="startIndex"></param>
-        /// <param name="typeArgumentListSynax"></param>
-        /// <returns>The number of characters processed in the string</returns>
-        static int CreateGenericTypeArgumentList(string typeName, int startIndex, out TypeArgumentListSyntax typeArgumentListSynax)
-        {
-            // Identifier<> Case
-            var nextTokenIndex = typeName.IndexOfAny(TypeTokens, startIndex);
-            var nextToken = typeName.Substring(nextTokenIndex, 1);
-            if (nextToken == ">")
-            {
-                var prevIdentifier = typeName.Substring(startIndex, nextTokenIndex - startIndex);
-                if (String.IsNullOrWhiteSpace(prevIdentifier))
-                {
-                    typeArgumentListSynax = SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(new TypeSyntax[] { SyntaxFactory.OmittedTypeArgument() }));
-                    return nextTokenIndex + 1;
-                }
-            }
 
-            // Identifier<Identifier...> Case
+        /// <summary>
+        /// Creates a generic type argument list from a string
+        /// </summary>
+        /// <param name="lexer"></param>
+        /// <param name="typeArgumentListSynax"></param>
+        /// <returns></returns>
+        static TypeNameLexer CreateGenericTypeArgumentList(TypeNameLexer lexer, out TypeArgumentListSyntax typeArgumentListSynax)
+        {
             TypeSyntax currentTypeSyntax;
-            var searchedLength = CreateTypeSyntax(typeName, startIndex, out currentTypeSyntax);
-            var prevStartIndex = startIndex + searchedLength;
-            nextTokenIndex = typeName.IndexOfAny(TypeTokens, prevStartIndex);
+            lexer = CreateTypeSyntax(lexer, true, out currentTypeSyntax);
             List<TypeSyntax> typeArgumentList = new List<TypeSyntax>();
             typeArgumentList.Add(currentTypeSyntax);
-            while (nextTokenIndex != -1)
+            lexer.NextToken();
+            while (lexer.HasMoreTokens)
             {
-                nextToken = typeName.Substring(nextTokenIndex, 1);
-                prevStartIndex = nextTokenIndex + 1;
+                var nextToken = lexer.Token;
 
                 switch (nextToken)
                 {
                     case ",":
-                        searchedLength = CreateTypeSyntax(typeName, prevStartIndex, out currentTypeSyntax);
-                        prevStartIndex += searchedLength;
+                        lexer = CreateTypeSyntax(lexer, true, out currentTypeSyntax);
                         typeArgumentList.Add(currentTypeSyntax);
                         break;
                     case ">":
                         typeArgumentListSynax = SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(typeArgumentList));
-                        return prevStartIndex;
+                        return lexer;
                     default:
-                        throw new ArgumentException($"Unexpected token '{nextToken}' at index {nextTokenIndex} of type syntax {typeName}");
+                        lexer.ThrowTokenError();
+                        break;
                 }
-
-                nextTokenIndex = typeName.IndexOfAny(TypeTokens, prevStartIndex);
             }
             typeArgumentListSynax = SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(typeArgumentList));
-            return typeName.Length - startIndex;
+            return lexer;
         }
     }
 }
