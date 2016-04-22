@@ -13,7 +13,7 @@ namespace Asyncify.Extensions
         private int _length;
         private int _prevIndex;
         public string Token => TypeName.Substring(_currentIndex, 1);
-        public string ProceedingIdentifier => TypeName.Substring(_prevIndex, _currentIndex - _prevIndex);
+        public string ProceedingIdentifier => TypeName.Substring(_prevIndex, _currentIndex - _prevIndex).Trim();
         public string TypeName { get; }
         public bool HasMoreTokens { get; private set; }
 
@@ -28,7 +28,9 @@ namespace Asyncify.Extensions
 
         public bool NextToken()
         {
+#if DEBUG
             Debug.WriteLine(ToString());
+#endif
             _prevIndex = _searchIndex;
             _currentIndex = TypeName.IndexOfAny(TypeTokens, _searchIndex, _length);
             if (_currentIndex < 0)
@@ -47,7 +49,11 @@ namespace Asyncify.Extensions
 
         string GetSafeToken()
         {
-            return _length <= 0 ? "END" : Token;
+            if (_length <= 0)
+                return "END";
+            if (_searchIndex <= 0)
+                return "START";
+            return Token;
         }
 
         public void ThrowTokenError()

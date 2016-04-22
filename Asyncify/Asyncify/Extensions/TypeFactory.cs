@@ -63,8 +63,7 @@ namespace Asyncify.Extensions
             CreateGenericTypeArgumentList(lexer, out typeArgumentList);
             return typeArgumentList;
         }
-
-        private static readonly char[] TypeTokens = { '.', ',', '<', '>' };
+        
 
         /// <summary>
         /// Creates a type syntax from a type string.
@@ -80,6 +79,8 @@ namespace Asyncify.Extensions
             if (!lexer.HasMoreTokens)
             {
                 nameTypeSyntax = SyntaxFactory.IdentifierName(lexer.ProceedingIdentifier);
+                fullTypeSyntax = nameTypeSyntax;
+                return lexer;
             }
             else
             {
@@ -95,7 +96,8 @@ namespace Asyncify.Extensions
                         lexer = CreateGenericTypeArgumentList(lexer, out typeParamList);
                         nameTypeSyntax = SyntaxFactory.GenericName(SyntaxFactory.Identifier(prevIdentifier),
                             typeParamList);
-                        break;
+                        fullTypeSyntax = nameTypeSyntax;
+                        return lexer;
                     case ">":
                     case ",":
                         if (insideGeneric)
@@ -131,9 +133,10 @@ namespace Asyncify.Extensions
                     case "<":
                         TypeArgumentListSyntax typeParamList;
                         lexer = CreateGenericTypeArgumentList(lexer, out typeParamList);
-                        nameTypeSyntax = SyntaxFactory.GenericName(SyntaxFactory.Identifier(prevIdentifier),
-                            typeParamList);
-                        break;
+                        nameTypeSyntax = SyntaxFactory.QualifiedName(nameTypeSyntax, SyntaxFactory.GenericName(SyntaxFactory.Identifier(prevIdentifier),
+                            typeParamList));
+                        fullTypeSyntax = nameTypeSyntax;
+                        return lexer;
                     case ">":
                     case ",":
                         if (insideGeneric)
@@ -143,6 +146,7 @@ namespace Asyncify.Extensions
                                 lexer.ThrowIdentifierError();
                             }
 
+                            nameTypeSyntax = SyntaxFactory.QualifiedName(nameTypeSyntax, SyntaxFactory.IdentifierName(prevIdentifier));
                             fullTypeSyntax = nameTypeSyntax;
                             return lexer;
                         }
@@ -156,6 +160,7 @@ namespace Asyncify.Extensions
 
                 lexer.NextToken();
             }
+            nameTypeSyntax = SyntaxFactory.QualifiedName(nameTypeSyntax, SyntaxFactory.IdentifierName(lexer.ProceedingIdentifier));
             fullTypeSyntax = nameTypeSyntax;
             return lexer;
         }
@@ -172,7 +177,6 @@ namespace Asyncify.Extensions
             lexer = CreateTypeSyntax(lexer, true, out currentTypeSyntax);
             List<TypeSyntax> typeArgumentList = new List<TypeSyntax>();
             typeArgumentList.Add(currentTypeSyntax);
-            lexer.NextToken();
             while (lexer.HasMoreTokens)
             {
                 var nextToken = lexer.Token;
@@ -185,6 +189,7 @@ namespace Asyncify.Extensions
                         break;
                     case ">":
                         typeArgumentListSynax = SyntaxFactory.TypeArgumentList(SyntaxFactory.SeparatedList(typeArgumentList));
+                        lexer.NextToken();
                         return lexer;
                     default:
                         lexer.ThrowTokenError();
