@@ -78,7 +78,7 @@ namespace Asyncify.RefactorProviders
             if (awaitedType == null)
                 return context.DocumentContext.Document;
             // Semantic evaluations come first as doing them off the modified tree requires a recompile of the document.
-            context.SemanticContext = VariableSemanticContext.CreateForLocalVariable(context.TargetAwaitExpression, awaitedType, "taskResult", semanticModel);
+            context.SemanticContext = await VariableSemanticContext.CreateForLocalVariable(context.TargetAwaitExpression, awaitedType, "taskResult", semanticModel);
              
             var containingLambda = context.OriginalContainingBodySyntax.FindContainingLambda();
             // is single line lambda

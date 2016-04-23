@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Asyncify.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -33,13 +34,13 @@ namespace Asyncify.Contexts
         /// <param name="variableName">Variable name that serves as a prefix if there are conflicts</param>
         /// <param name="semanticModel">Semantic model of the expressionLocation tree</param>
         /// <returns></returns>
-        public static VariableSemanticContext CreateForLocalVariable(ExpressionSyntax expressionLocation, ITypeSymbol variableType, string variableName, SemanticModel semanticModel)
+        public static async Task<VariableSemanticContext> CreateForLocalVariable(ExpressionSyntax expressionLocation, ITypeSymbol variableType, string variableName, SemanticModel semanticModel)
         {
             var defaultVarName = expressionLocation.GenerateDefaultUnusedLocalVariableName(variableName, semanticModel);
             
             var minimalTypeString = variableType.ToMinimalDisplayString(semanticModel,
                 expressionLocation.SpanStart);
-            var varTypeDeclaration = TypeFactory.CreateTypeSyntax(minimalTypeString);
+            var varTypeDeclaration = await TypeFactory.CreateTypeSyntax(minimalTypeString);
             var varNameDeclaration = SyntaxFactory.IdentifierName(defaultVarName);
             return new VariableSemanticContext(varTypeDeclaration, varNameDeclaration, semanticModel);
         }
