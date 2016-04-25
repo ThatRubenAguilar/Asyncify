@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Asyncify.Test.Extensions;
+using Asyncify.Test.Helpers.Code;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -14,6 +15,15 @@ namespace Asyncify.Test
         where TAnalyzer : DiagnosticAnalyzer, new()
         where TProvider : CodeFixProvider, new()
     {
+
+        protected static readonly ProjectUnit TaskWrapperProject = new ProjectUnit(
+            new SourceCodeUnit[]
+            {
+                new TaskStaticCode(), new TaskMemberCode(), new TaskChildCode(), new TaskNamespacedStaticCode(),
+            });
+
+        protected static readonly TaskExpressionWrapper TaskWrapperCode = new TaskExpressionWrapper();
+
         protected override CodeFixProvider GetCSharpCodeFixProvider()
         {
             return new TProvider();
@@ -25,35 +35,35 @@ namespace Asyncify.Test
         }
         
 
-        protected void AwaitTaskDiagnosticAndFix(string testExpression, DiagnosticResult expected,
-            string fixedExpression, bool allowNewCompilerDiagnostics = false)
+        protected void AwaitTaskDiagnosticAndFix(MergedCodeUnit testExpression, DiagnosticResult expected,
+            MergedCodeUnit fixedExpression, bool allowNewCompilerDiagnostics = false)
         {
-            var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass), expected);
+            var testTaskClass = testExpression;
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass), expected);
 
-            var fixTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, fixedExpression);
-            VerifyCSharpFix(testTaskClass, fixTaskClass, TestSourceCode.SupportingSources, allowNewCompilerDiagnostics, expected);
+            var fixTaskClass = fixedExpression;
+            VerifyCSharpFix(testTaskClass.ToString(), fixTaskClass.ToString(), TaskWrapperProject.SupportingSourcesAsString(), allowNewCompilerDiagnostics, expected);
         }
-        protected void AwaitTaskDiagnosticsAndFix(string testExpression, DiagnosticResult[] expected,
-            string fixedExpression, bool allowNewCompilerDiagnostics = false)
+        protected void AwaitTaskDiagnosticsAndFix(MergedCodeUnit testExpression, DiagnosticResult[] expected,
+            MergedCodeUnit fixedExpression, bool allowNewCompilerDiagnostics = false)
         {
-            var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass), expected);
+            var testTaskClass = testExpression;
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass), expected);
 
-            var fixTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, fixedExpression);
-            VerifyCSharpFix(testTaskClass, fixTaskClass, TestSourceCode.SupportingSources, allowNewCompilerDiagnostics);
+            var fixTaskClass = fixedExpression;
+            VerifyCSharpFix(testTaskClass.ToString(), fixTaskClass.ToString(), TaskWrapperProject.SupportingSourcesAsString(), allowNewCompilerDiagnostics);
         }
 
 
-        protected DiagnosticResult AwaitTaskExpectedResult(string testExpression,
+        protected DiagnosticResult AwaitTaskExpectedResult(MergedCodeUnit testExpression,
             DiagnosticDescriptor rule, string blockingCallCode, string callerTaskExpression)
         {
             return AwaitTaskExpectedResults(testExpression, rule, blockingCallCode, callerTaskExpression).Single();
         }
 
-        protected IEnumerable<DiagnosticResult> AwaitTaskExpectedResults(string testExpression, DiagnosticDescriptor rule, string blockingCallCode, params string[] callerTaskExpressions)
+        protected IEnumerable<DiagnosticResult> AwaitTaskExpectedResults(MergedCodeUnit testExpression, DiagnosticDescriptor rule, string blockingCallCode, params string[] callerTaskExpressions)
         {
-            var lineColOffsets = testExpression.FindSourceLocations(blockingCallCode);
+            var lineColOffsets = (IEnumerable<ResultLocation>)testExpression.FindAbsoluteSourceLocations(0,blockingCallCode);
             var lineColOffsetsEnum = lineColOffsets.GetEnumerator();
             var callerTaskExprEnum = callerTaskExpressions.GetEnumerator();
             while(lineColOffsetsEnum.MoveNext() && callerTaskExprEnum.MoveNext())
@@ -61,7 +71,6 @@ namespace Asyncify.Test
                 var lineColOffset = lineColOffsetsEnum.Current;
                 var callerTaskExpression = callerTaskExprEnum.Current;
 
-                var absoluteLocation = TestSourceCode.TaskExpressionWrapperLocation.Add(lineColOffset);
                 var expected = new DiagnosticResult
                 {
                     Id = rule.Id,
@@ -71,7 +80,7 @@ namespace Asyncify.Test
                     Locations =
                         new[]
                         {
-                            new DiagnosticResultLocation("Test0.cs", absoluteLocation)
+                            new DiagnosticResultLocation("Test0.cs", lineColOffset)
                         }
                 };
                 yield return expected;

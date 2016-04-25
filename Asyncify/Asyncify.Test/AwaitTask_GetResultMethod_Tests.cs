@@ -18,13 +18,23 @@ namespace Asyncify.Test
 
         private DiagnosticResult AwaitTaskGetResultMethodExpectedResult(string testExpression, string callerTaskExpression)
         {
-            return AwaitTaskExpectedResult(testExpression, AsyncifyRules.AwaitTaskGetResultRule, "GetResult()", callerTaskExpression);
+            return AwaitTaskExpectedResult(TaskWrapperCode.MergeCode(testExpression), AsyncifyRules.AwaitTaskGetResultRule, "GetResult()", callerTaskExpression);
         }
         private IEnumerable<DiagnosticResult> AwaitTaskGetResultMethodExpectedResults(string testExpression, params string[] callerTaskExpressions)
         {
-            return AwaitTaskExpectedResults(testExpression, AsyncifyRules.AwaitTaskGetResultRule, "GetResult()", callerTaskExpressions);
+            return AwaitTaskExpectedResults(TaskWrapperCode.MergeCode(testExpression), AsyncifyRules.AwaitTaskGetResultRule, "GetResult()", callerTaskExpressions);
         }
-        
+
+        private void AwaitTaskDiagnosticAndFix(string testExpression, DiagnosticResult expected, string fixExpression, bool allowNewCompilerDiagnostics = false)
+        {
+            AwaitTaskDiagnosticAndFix(TaskWrapperCode.MergeCode(testExpression), expected, TaskWrapperCode.MergeCode(fixExpression), allowNewCompilerDiagnostics);
+        }
+
+        private void AwaitTaskDiagnosticsAndFix(string testExpression, DiagnosticResult[] expected, string fixExpression, bool allowNewCompilerDiagnostics = false)
+        {
+            AwaitTaskDiagnosticsAndFix(TaskWrapperCode.MergeCode(testExpression), expected, TaskWrapperCode.MergeCode(fixExpression), allowNewCompilerDiagnostics);
+        }
+
 
         [TestMethod, TestCategory("Await.Task.GetAwaiter().GetResult()")]
         public void Should_have_no_diagnostic_for_empty_code()
@@ -57,13 +67,14 @@ namespace Asyncify.Test
             AwaitTaskDiagnosticAndFix(testExpression, expected.Last(), fixOuterExpression, true);
         }
 
+
         [TestMethod, TestCategory("Await.Task.GetAwaiter().GetResult()")]
         public void Should_have_no_diagnostic_for_non_task_getresult_method()
         {
             var testExpression = @"var val = (new AsyncMemberMethods()).GetAwaiter().GetResult();";
 
-            var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass));
+            var testTaskClass = TaskWrapperCode.MergeCode(testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
         }
 
         [TestMethod, TestCategory("Await.Task.GetAwaiter().GetResult()")]
@@ -72,8 +83,8 @@ namespace Asyncify.Test
             var testExpression = @"var awaiter = (new AsyncMemberMethods()).GetAwaiter();
 var val = awaiter.GetResult();";
 
-            var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass));
+            var testTaskClass = TaskWrapperCode.MergeCode( testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
         }
         [TestMethod, TestCategory("Await.Task.GetAwaiter().GetResult()")]
         public void Should_not_add_parenthesis_to_await_task_fix_on_generic_task_getresult_method_when_return_value_not_used()

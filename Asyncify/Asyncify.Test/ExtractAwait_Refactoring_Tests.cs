@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Asyncify.RefactorProviders;
 using Asyncify.Test.Helpers.Code;
@@ -10,6 +11,16 @@ namespace Asyncify.Test
     public class ExtractAwait_Refactoring_Tests :
         AwaitTaskRefactoringVerifier<ExtractAwaitExpressionToVariableRefactorProvider>
     {
+
+        protected ResultLocation ExpectedResultLocation(string testExpression, string refactoringTargetCode)
+        {
+            return ExpectedResultLocation(TaskWrapperCode.MergeCode(testExpression), refactoringTargetCode);
+        }
+
+        protected IEnumerable<ResultLocation> ExpectedResultLocations(string testExpression, string blockingCallCode)
+        {
+            return ExpectedResultLocations(TaskWrapperCode.MergeCode(testExpression), blockingCallCode);
+        }
 
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_have_no_change_for_empty_code()

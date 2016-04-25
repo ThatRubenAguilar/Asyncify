@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Asyncify.Test.Extensions;
+using Asyncify.Test.Helpers.Code;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -15,6 +16,8 @@ namespace TestHelper
 {
     public abstract class RefactoringFixVerifier
     {
+
+
         protected virtual CodeRefactoringProvider GetCSharpRefactoringProvider()
         {
             return null;

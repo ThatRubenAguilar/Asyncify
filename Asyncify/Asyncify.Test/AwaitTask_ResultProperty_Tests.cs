@@ -18,11 +18,21 @@ namespace Asyncify.Test
 
         private DiagnosticResult AwaitTaskResultPropertyExpectedResult(string testExpression, string callerTaskExpression)
         {
-            return AwaitTaskExpectedResult(testExpression, AsyncifyRules.AwaitTaskResultRule, "Result", callerTaskExpression);
+            return AwaitTaskExpectedResult(TaskWrapperCode.MergeCode(testExpression), AsyncifyRules.AwaitTaskResultRule, "Result", callerTaskExpression);
         }
         private IEnumerable<DiagnosticResult> AwaitTaskResultPropertyExpectedResults(string testExpression, params string[] callerTaskExpressions)
         {
-            return AwaitTaskExpectedResults(testExpression, AsyncifyRules.AwaitTaskResultRule, "Result", callerTaskExpressions);
+            return AwaitTaskExpectedResults(TaskWrapperCode.MergeCode(testExpression), AsyncifyRules.AwaitTaskResultRule, "Result", callerTaskExpressions);
+        }
+
+        private void AwaitTaskDiagnosticAndFix(string testExpression, DiagnosticResult expected, string fixExpression, bool allowNewCompilerDiagnostics = false)
+        {
+            AwaitTaskDiagnosticAndFix(TaskWrapperCode.MergeCode(testExpression), expected, TaskWrapperCode.MergeCode(fixExpression), allowNewCompilerDiagnostics);
+        }
+
+        private void AwaitTaskDiagnosticsAndFix(string testExpression, DiagnosticResult[] expected, string fixExpression, bool allowNewCompilerDiagnostics = false)
+        {
+            AwaitTaskDiagnosticsAndFix(TaskWrapperCode.MergeCode(testExpression), expected, TaskWrapperCode.MergeCode(fixExpression), allowNewCompilerDiagnostics);
         }
 
         [TestMethod, TestCategory("Await.Task.Result")]
@@ -62,8 +72,8 @@ namespace Asyncify.Test
         {
             var testExpression = @"var val = (new AsyncMemberMethods()).Result;";
 
-            var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass));
+            var testTaskClass = TaskWrapperCode.MergeCode( testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
         }
         [TestMethod, TestCategory("Await.Task.Result")]
         public void Should_not_add_parenthesis_to_await_task_fix_on_generic_task_result_property_when_return_value_not_used()

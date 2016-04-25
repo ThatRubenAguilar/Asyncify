@@ -16,10 +16,10 @@ namespace Asyncify.Test.Helpers.Code
 {1}/* Comment Else */
 #endif
 {2}/*
-{2}Multi Line Comment 
-{2}*/
-{3}#region Region
-{3}#endregion
+{3}Multi Line Comment 
+{4}*/
+{5}#region Region
+{6}#endregion
 ";
 
         public FullTriviaCode(int ifDirectiveIndents = 0, int elseDirectiveIndents = 0, int multilineCommentIndents = 0, int regionIndents = 0) : base(new WrapperCodeUnit(WrapperSourceCode), CreateWhitespaceTrivia(ifDirectiveIndents, elseDirectiveIndents, multilineCommentIndents, regionIndents))
@@ -32,7 +32,9 @@ namespace Asyncify.Test.Helpers.Code
             var elseDirectiveCode = new SourceCodeUnit(CreateSpaces(elseDirectiveIndents * IndentSize));
             var multilineCommentCode = new SourceCodeUnit(CreateSpaces(multilineCommentIndents * IndentSize));
             var regionCode = new SourceCodeUnit(CreateSpaces(regionIndents * IndentSize));
-            return new []{ ifDirectiveCode, elseDirectiveCode, multilineCommentCode, regionCode};
+            return new []{ ifDirectiveCode, elseDirectiveCode,
+                multilineCommentCode,multilineCommentCode,multilineCommentCode,
+                regionCode,regionCode,};
         }
 
         private static string CreateSpaces(int numSpaces)

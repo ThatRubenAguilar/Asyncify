@@ -15,5 +15,10 @@ namespace Asyncify.Test.Helpers.Code
         {
             return expressions.Select(s => s.Code).Concat(SupportingSources.Select(s => s.Code)).ToArray();
         }
+
+        public string[] SupportingSourcesAsString()
+        {
+            return SupportingSources.Select(s => s.Code).ToArray();
+        }
     }
 }

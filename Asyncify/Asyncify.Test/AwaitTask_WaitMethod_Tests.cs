@@ -18,13 +18,22 @@ namespace Asyncify.Test
     {
         private DiagnosticResult AwaitTaskWaitMethodExpectedResult(string testExpression, string callerTaskExpression)
         {
-            return AwaitTaskExpectedResults(testExpression, AsyncifyRules.AwaitTaskWaitRule, "Wait()", callerTaskExpression).Single();
+            return AwaitTaskExpectedResults(TaskWrapperCode.MergeCode(testExpression), AsyncifyRules.AwaitTaskWaitRule, "Wait()", callerTaskExpression).Single();
         }
         private IEnumerable<DiagnosticResult> AwaitTaskWaitMethodExpectedResults(string testExpression, params string[] callerTaskExpressions)
         {
-            return AwaitTaskExpectedResults(testExpression, AsyncifyRules.AwaitTaskWaitRule, "Wait()", callerTaskExpressions);
+            return AwaitTaskExpectedResults(TaskWrapperCode.MergeCode(testExpression), AsyncifyRules.AwaitTaskWaitRule, "Wait()", callerTaskExpressions);
         }
 
+        private void AwaitTaskDiagnosticAndFix(string testExpression, DiagnosticResult expected, string fixExpression, bool allowNewCompilerDiagnostics = false)
+        {
+            AwaitTaskDiagnosticAndFix(TaskWrapperCode.MergeCode(testExpression), expected, TaskWrapperCode.MergeCode(fixExpression), allowNewCompilerDiagnostics);
+        }
+
+        private void AwaitTaskDiagnosticsAndFix(string testExpression, DiagnosticResult[] expected, string fixExpression, bool allowNewCompilerDiagnostics = false)
+        {
+            AwaitTaskDiagnosticsAndFix(TaskWrapperCode.MergeCode(testExpression), expected, TaskWrapperCode.MergeCode(fixExpression), allowNewCompilerDiagnostics);
+        }
 
         [TestMethod, TestCategory("Await.Task.Wait()")]
         public void Should_have_no_diagnostic_for_empty_code()
@@ -52,8 +61,8 @@ AsyncMethods.PerformProcessing().Wait();";
         {
             var testExpression = @"(new AsyncMemberMethods()).Wait();";
 
-            var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
-            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass));
+            var testTaskClass = TaskWrapperCode.MergeCode( testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
         }
 
         [TestMethod, TestCategory("Await.Task.Wait()")]
@@ -61,11 +70,11 @@ AsyncMethods.PerformProcessing().Wait();";
         {
             var testExpression = @"AsyncMethods.GetNumber().Wait();";
 
-            var testTaskClass = String.Format(TestSourceCode.TaskExpressionWrapper, testExpression);
+            var testTaskClass = TaskWrapperCode.MergeCode( testExpression);
 
-            var expected = AwaitTaskExpectedResult(testExpression, AsyncifyRules.RemoveGenericTaskWaitRule, "Wait()", "AsyncMethods.GetNumber()");
+            var expected = AwaitTaskExpectedResult(testTaskClass, AsyncifyRules.RemoveGenericTaskWaitRule, "Wait()", "AsyncMethods.GetNumber()");
 
-            VerifyCSharpDiagnostic(TestSourceCode.GetCompilationSources(testTaskClass), expected);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass), expected);
         }
 
 
