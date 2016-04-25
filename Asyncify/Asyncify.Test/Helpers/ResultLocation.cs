@@ -38,6 +38,10 @@ namespace TestHelper
         {
             return new ResultLocation(Line + b.Line - 1, Column + b.Column - 1, Span.Start + b.Span.Start, Span.Length + b.Span.Length);
         }
+        public ResultLocation AddLines(int lines)
+        {
+            return new ResultLocation(Line + lines, Column, Span.Start, Span.Length);
+        }
 
         public bool Equals(ResultLocation other)
         {

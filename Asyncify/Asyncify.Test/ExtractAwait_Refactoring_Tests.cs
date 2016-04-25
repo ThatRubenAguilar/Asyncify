@@ -1,5 +1,6 @@
 using System.Linq;
 using Asyncify.RefactorProviders;
+using Asyncify.Test.Helpers.Code;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestHelper;
 
@@ -110,7 +111,7 @@ namespace Asyncify.Test
             var t = ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
         }}
 ";
-            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents + 1);
+            var formattedTrivia = FullTriviaCode.TriviaTextFormatted(TestSourceCode.DefaultIndents + 1);
             var fixExpression = $@"
         {{
             AsyncMemberMethods taskResult =
@@ -213,7 +214,7 @@ Action lambda = async () =>
             return ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
         }};
 ";
-            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents+1);
+            var formattedTrivia = FullTriviaCode.TriviaTextFormatted(TestSourceCode.DefaultIndents+1);
             var fixExpression = $@"
         Func<Task<AsyncMemberMethods>> lambda = async () =>
         {{
@@ -324,7 +325,7 @@ Action lambda = async () => await AsyncMethods.PerformProcessing();
         Func<Task<AsyncMemberMethods>> lambda = async () => ({TestSourceCode.FullTriviaText}await AsyncMethods.GetMemberMethods({TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}){TestSourceCode.FullTriviaText}.Field1;
 ";
 
-            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents+1);
+            var formattedTrivia = FullTriviaCode.TriviaTextFormatted(TestSourceCode.DefaultIndents+1);
             var fixExpression = $@"
         Func<Task<AsyncMemberMethods>> lambda = async () =>
         {{
@@ -374,7 +375,7 @@ Action lambda = async () => await AsyncMethods.PerformProcessing();
         /*
         TODO: see how it handles types that are not included in the namespace, use simplifier/include using, also add 2 deep namespace tests
         TODO: Pipe async definition up 1
-        TODO: CS4033 fix with async Task instead of void
+        TODO: CS4033 fix with async Task instead of void, split lambda and anonymous method delegates (may need to find type and change base) and method
     */
     }
 }

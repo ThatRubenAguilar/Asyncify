@@ -166,9 +166,14 @@ namespace Asyncify.RefactorProviders
 
             var syntaxEditor = context.DocumentContext.CreateSyntaxEditor();
             syntaxEditor.ReplaceNode(context.OriginalContainingBodySyntax, newBlock);
-            var newRoot = syntaxEditor.GetChangedRoot();
+
+            var newRoot = syntaxEditor.GetChangedRoot() as CompilationUnitSyntax;
+            if (newRoot == null)
+                return context.DocumentContext.Document.AsTask();
+            var finalRoot = newRoot.AddUsingIfNotPresent(AsyncifyResources.TaskNamespace);
             // Replace the old node
-            var newDocument = context.DocumentContext.Document.WithSyntaxRoot(newRoot);
+            var newDocument = context.DocumentContext.Document.WithSyntaxRoot(finalRoot);
+
             return Formatter.FormatAsync(newDocument, cancellationToken:context.DocumentContext.Token);
         }
 

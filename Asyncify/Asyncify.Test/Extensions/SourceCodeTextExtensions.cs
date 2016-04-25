@@ -190,5 +190,21 @@ namespace Asyncify.Test.Extensions
             }
             return newLineLocationList;
         }
+
+        /// <summary>
+        /// Gets the required number of format references required by a format string
+        /// </summary>
+        /// <param name="formatString"></param>
+        /// <returns></returns>
+        public static int RequiredFormatReferences(this string formatString)
+        {
+            var removedEscapeBraces = Regex.Replace(formatString, @"(\{{2}|\}{2})", "");
+            var matches = Regex.Matches(removedEscapeBraces, @"\{(\d+)(?:\:?[^}]*)\}");
+            var parsedReferenceNumbers = matches.OfType<Match>()
+                .SelectMany(match => match.Groups.OfType<Group>().Skip(1))
+                .Select(index => Int32.Parse(index.Value));
+
+            return parsedReferenceNumbers.Max() + 1;
+        }   
     }
 }

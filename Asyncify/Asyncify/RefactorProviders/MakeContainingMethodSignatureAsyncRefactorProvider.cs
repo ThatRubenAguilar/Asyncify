@@ -26,11 +26,16 @@ namespace Asyncify.RefactorProviders
             // Find the node at the selection.
             var node = root.FindNode(context.Span);
 
-            // Only offer a refactoring if the selected node is a method syntax.
+            // Only offer a refactoring if the selected node is a method syntax or contained within an await within method syntax.
             var methodSyntax = node as MethodDeclarationSyntax;
             if (methodSyntax == null)
             {
-                return;
+                methodSyntax = node.ContainedWithinNodeOrDefault<MethodDeclarationSyntax>();
+                if (methodSyntax == null)
+                    return;
+
+                if (!node.ContainedWithin<AwaitExpressionSyntax>(methodSyntax))
+                    return;
             }
             
             await AnalyzeMakeMethodAsync(root, context, methodSyntax);
@@ -84,14 +89,11 @@ namespace Asyncify.RefactorProviders
         private async Task<Document> MakeMethodAsync(MakeMethodAsyncContext methodAsyncContext)
         {
             /*
-                Open ?: Do we want to split Task only/async included refactorings?
-                Do we want to combine lambda logic with method declaration logic?
-
-                Logic: check if method is already async and avoid
+                Logic: check if method is already async, if so return
+                check if method has awaits, if not return
                 find return value of method
                 look through method for awaited expressions in the method flow
-                 wrap return value in Task 
-                if an await exists, put async
+                wrap return value in Task 
                 if no await modify non task return statements to be wrapped with Task.FromResult
                 import using Task if not existing.
             */
@@ -100,45 +102,32 @@ namespace Asyncify.RefactorProviders
             if (methodAsyncContext.AwaitInMethodFlow && !methodAsyncContext.MethodSymbol.IsAsync)
             {
                 var asyncToken = SyntaxFactory.Token(SyntaxKind.AsyncKeyword);
+                TypeSyntax taskToken;
                 if (methodAsyncContext.MethodSymbol.ReturnsVoid)
                 {
-                    var taskToken = await TypeFactory.CreateTypeSyntax(AsyncifyResources.TaskFullName);
-                    taskToken = taskToken.WithAdditionalAnnotations(Simplifier.Annotation);
-
-                    var newAsyncMethodNode = methodNode.AddModifiers(asyncToken);
-                    newAsyncMethodNode = newAsyncMethodNode.WithReturnType(taskToken);
-
-                    var syntaxEditor = methodAsyncContext.DocumentContext.CreateSyntaxEditor();
-                    syntaxEditor.ReplaceNode(methodNode, newAsyncMethodNode);
-                    var newRoot = syntaxEditor.GetChangedRoot() as CompilationUnitSyntax;
-                    if (newRoot == null)
-                        return methodAsyncContext.DocumentContext.Document;
-
-                    var finalRoot = newRoot.AddUsingIfNotPresent(AsyncifyResources.TaskNamespace);
-
-                    return methodAsyncContext.DocumentContext.Document.WithSyntaxRoot(finalRoot);
+                    taskToken = await TypeFactory.CreateTypeSyntax(AsyncifyResources.TaskFullName);
 
                 }
                 else
                 {
-                    // TODO: Implement for nonvoid methods
+                    var minimalTypeName = methodAsyncContext.MethodSymbol.ReturnType.ToString();
 
-                    var taskToken = await TypeFactory.CreateTypeSyntax(AsyncifyResources.TaskFullName);
-                    taskToken = taskToken.WithAdditionalAnnotations(Simplifier.Annotation);
-
-                    var newAsyncMethodNode = methodNode.AddModifiers(asyncToken);
-                    newAsyncMethodNode = newAsyncMethodNode.WithReturnType(taskToken);
-
-                    var syntaxEditor = methodAsyncContext.DocumentContext.CreateSyntaxEditor();
-                    syntaxEditor.ReplaceNode(methodNode, newAsyncMethodNode);
-                    var newRoot = syntaxEditor.GetChangedRoot() as CompilationUnitSyntax;
-                    if (newRoot == null)
-                        return methodAsyncContext.DocumentContext.Document;
-
-                    var finalRoot = newRoot.AddUsingIfNotPresent(AsyncifyResources.TaskNamespace);
-
-                    return methodAsyncContext.DocumentContext.Document.WithSyntaxRoot(finalRoot);
+                    taskToken = await TypeFactory.CreateTypeSyntax($"{AsyncifyResources.TaskFullName}<{minimalTypeName}>");
                 }
+                taskToken = taskToken.Simplify();
+
+                var newAsyncMethodNode = methodNode.AddModifiers(asyncToken);
+                newAsyncMethodNode = newAsyncMethodNode.WithReturnType(taskToken);
+
+                var syntaxEditor = methodAsyncContext.DocumentContext.CreateSyntaxEditor();
+                syntaxEditor.ReplaceNode(methodNode, newAsyncMethodNode);
+                var newRoot = syntaxEditor.GetChangedRoot() as CompilationUnitSyntax;
+                if (newRoot == null)
+                    return methodAsyncContext.DocumentContext.Document;
+
+                var finalRoot = newRoot.AddUsingIfNotPresent(AsyncifyResources.TaskNamespace);
+
+                return methodAsyncContext.DocumentContext.Document.WithSyntaxRoot(finalRoot);
             }
 
             return methodAsyncContext.DocumentContext.Document;

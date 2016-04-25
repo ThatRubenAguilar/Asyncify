@@ -109,6 +109,16 @@
     <Compile Include="Extensions\SourceCodeTextExtensions.cs" />
     <Compile Include="ExtractAwait_Refactoring_Tests.cs" />
     <Compile Include="FindSourceLocation_Tests.cs" />
+    <Compile Include="Helpers\Code\FullTriviaCode.cs" />
+    <Compile Include="Helpers\Code\MergedCodeUnit.cs" />
+    <Compile Include="Helpers\Code\ProjectUnit.cs" />
+    <Compile Include="Helpers\Code\SourceCodeUnit.cs" />
+    <Compile Include="Helpers\Code\TaskChildCode.cs" />
+    <Compile Include="Helpers\Code\TaskExpressionWrapper.cs" />
+    <Compile Include="Helpers\Code\TaskMemberCode.cs" />
+    <Compile Include="Helpers\Code\TaskNamespacedStaticCode.cs" />
+    <Compile Include="Helpers\Code\TaskStaticCode.cs" />
+    <Compile Include="Helpers\Code\WrapperCodeUnit.cs" />
     <Compile Include="Helpers\ResultLocation.cs" />
     <Compile Include="Helpers\TestSourceCode.cs" />
     <Compile Include="RemoveTask_WaitMethod_Tests.cs" />

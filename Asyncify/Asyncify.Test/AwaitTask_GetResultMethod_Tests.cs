@@ -4,6 +4,7 @@ using System.Linq;
 using Asyncify.Analyzers;
 using Asyncify.FixProviders;
 using Asyncify.Test.Extensions;
+using Asyncify.Test.Helpers.Code;
 using Microsoft.CodeAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestHelper;
@@ -98,8 +99,8 @@ AsyncMethods.GetMemberMethods().GetAwaiter().GetResult();";
         GetAwaiter(){TestSourceCode.FullTriviaText}
         .GetResult(){TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
 
-            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
-            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
+            var unformattedTrivia = FullTriviaCode.TriviaTextUniform();
+            var formattedTrivia = FullTriviaCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
             var fixExpression = $@"
         var val = {unformattedTrivia}
         await AsyncMethods.GetMemberMethods({unformattedTrivia}
@@ -179,8 +180,8 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         {TestSourceCode.FullTriviaText}
         GetAwaiter(){TestSourceCode.FullTriviaText}.GetResult(){TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
 
-            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
-            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
+            var unformattedTrivia = FullTriviaCode.TriviaTextUniform();
+            var formattedTrivia = FullTriviaCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
             var fixExpression = $@"
         {unformattedTrivia}
         await AsyncMethods.PerformProcessing({unformattedTrivia}
@@ -228,8 +229,8 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         .GetResult(){TestSourceCode.FullTriviaText}
         .Field1{TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
 
-            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
-            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
+            var unformattedTrivia = FullTriviaCode.TriviaTextUniform();
+            var formattedTrivia = FullTriviaCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
             var fixExpression = $@"
         var val = {unformattedTrivia}
         (await AsyncMethods.GetMemberMethods({unformattedTrivia}
@@ -277,8 +278,8 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         .GetResult(){TestSourceCode.FullTriviaText}
         .Property1{TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
 
-            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
-            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
+            var unformattedTrivia = FullTriviaCode.TriviaTextUniform();
+            var formattedTrivia = FullTriviaCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
             var fixExpression = $@"
         var val = {unformattedTrivia}
         (await AsyncMethods.GetMemberMethods({unformattedTrivia}
@@ -327,8 +328,8 @@ AsyncMethods.PerformProcessing().GetAwaiter().GetResult()";
         .GetResult(){TestSourceCode.FullTriviaText}
         .GetNumber(){TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
 
-            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
-            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
+            var unformattedTrivia = FullTriviaCode.TriviaTextUniform();
+            var formattedTrivia = FullTriviaCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
             var fixExpression = $@"
         var val = {unformattedTrivia}
         (await AsyncMethods.GetMemberMethods({unformattedTrivia}

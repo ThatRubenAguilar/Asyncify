@@ -4,6 +4,7 @@ using Asyncify.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Simplification;
 
 namespace Asyncify.Contexts
 {
@@ -38,9 +39,7 @@ namespace Asyncify.Contexts
         {
             var defaultVarName = expressionLocation.GenerateDefaultUnusedLocalVariableName(variableName, semanticModel);
             
-            var minimalTypeString = variableType.ToMinimalDisplayString(semanticModel,
-                expressionLocation.SpanStart);
-            var varTypeDeclaration = await TypeFactory.CreateTypeSyntax(minimalTypeString);
+            var varTypeDeclaration = (await TypeFactory.CreateTypeSyntax(variableType.ToString())).Simplify();
             var varNameDeclaration = SyntaxFactory.IdentifierName(defaultVarName);
             return new VariableSemanticContext(varTypeDeclaration, varNameDeclaration, semanticModel);
         }

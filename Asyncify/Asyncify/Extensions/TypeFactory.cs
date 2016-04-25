@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Simplification;
 
 namespace Asyncify.Extensions
 {
@@ -22,6 +23,11 @@ namespace Asyncify.Extensions
             var treeRoot = await parsedTree.GetRootAsync();
             var typeNameNode = treeRoot.DescendantNodes().OfType<TypeSyntax>().FirstOrDefault();
             return typeNameNode;
+        }
+
+        public static TypeSyntax Simplify(this TypeSyntax syntax)
+        {
+            return syntax.WithAdditionalAnnotations(Simplifier.Annotation);
         }
     }
 }

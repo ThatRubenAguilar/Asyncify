@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Asyncify.Analyzers;
 using Asyncify.FixProviders;
+using Asyncify.Test.Helpers.Code;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestHelper;
 
@@ -74,7 +75,7 @@ namespace Asyncify.Test
         Wait(){TestSourceCode.FullTriviaText};
         {TestSourceCode.FullTriviaText}";
 
-            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
+            var unformattedTrivia = FullTriviaCode.TriviaTextUniform();
             var fixExpression = $@"
         {unformattedTrivia}
         {unformattedTrivia}

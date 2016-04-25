@@ -4,6 +4,7 @@ using System.Linq;
 using Asyncify.Analyzers;
 using Asyncify.FixProviders;
 using Asyncify.Test.Extensions;
+using Asyncify.Test.Helpers.Code;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestHelper;
 
@@ -78,8 +79,8 @@ AsyncMethods.PerformProcessing().Wait();";
         Wait(){TestSourceCode.FullTriviaText}; {TestSourceCode.FullTriviaText}";
 
 
-            var unformattedTrivia = TestSourceCode.TriviaTextUniform();
-            var formattedTrivia = TestSourceCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
+            var unformattedTrivia = FullTriviaCode.TriviaTextUniform();
+            var formattedTrivia = FullTriviaCode.TriviaTextFormatted(TestSourceCode.DefaultIndents, TestSourceCode.DefaultIndents);
             var fixExpression = $@"
         {unformattedTrivia}
         await AsyncMethods.PerformProcessing({unformattedTrivia}
