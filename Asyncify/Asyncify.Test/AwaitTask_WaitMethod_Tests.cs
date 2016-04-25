@@ -10,7 +10,6 @@ using TestHelper;
 
 namespace Asyncify.Test
 {
-    // TODO: Add lock/unsafe/out/ref tests
     [TestClass]
     public class AwaitTask_WaitMethod_Tests :
         AwaitTaskFixVerifier
@@ -40,6 +39,55 @@ namespace Asyncify.Test
         {
             var test = @"";
             VerifyCSharpDiagnostic(test);
+        }
+        [TestMethod, TestCategory("Await.Task.Wait()")]
+        public void Should_have_no_diagnostic_for_locked_code()
+        {
+            var testExpression = @"
+lock(this) 
+{
+    AsyncMethods.PerformProcessing().Wait();
+}
+";
+            var testTaskClass = TaskWrapperCode.MergeCode(testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+        }
+        [TestMethod, TestCategory("Await.Task.Wait()")]
+        public void Should_have_no_diagnostic_for_unsafe_code()
+        {
+            var testExpression = @"
+unsafe 
+{
+    AsyncMethods.PerformProcessing().Wait();
+}
+";
+            var testTaskClass = TaskWrapperCode.MergeCode(testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+        }
+        [TestMethod, TestCategory("Await.Task.Wait()")]
+        public void Should_have_no_diagnostic_for_unsafe_method_code()
+        {
+            var testExpression = @"AsyncMethods.PerformProcessing().Wait();";
+            var testMethod = @"unsafe async Task TestMethod()";
+            var testTaskClass = TaskMethodWrapperCode.MergeCode(testMethod, testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+        }
+        [TestMethod, TestCategory("Await.Task.Wait()")]
+        public void Should_have_no_diagnostic_for_out_method_code()
+        {
+            var testExpression = @"test = null;
+AsyncMethods.PerformProcessing().Wait();";
+            var testMethod = @"async Task TestMethod(out AsyncMemberMethods test)";
+            var testTaskClass = TaskMethodWrapperCode.MergeCode(testMethod, testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+        }
+        [TestMethod, TestCategory("Await.Task.Wait()")]
+        public void Should_have_no_diagnostic_for_ref_method_code()
+        {
+            var testExpression = @"AsyncMethods.PerformProcessing().Wait();";
+            var testMethod = @"unsafe async Task TestMethod(ref AsyncMemberMethods test)";
+            var testTaskClass = TaskMethodWrapperCode.MergeCode(testMethod, testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
         }
 
 

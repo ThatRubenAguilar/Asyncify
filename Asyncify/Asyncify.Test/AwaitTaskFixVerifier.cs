@@ -23,6 +23,7 @@ namespace Asyncify.Test
             });
 
         protected static readonly TaskExpressionWrapper TaskWrapperCode = new TaskExpressionWrapper();
+        protected static readonly TaskMethodWrapper TaskMethodWrapperCode = new TaskMethodWrapper();
 
         protected override CodeFixProvider GetCSharpCodeFixProvider()
         {

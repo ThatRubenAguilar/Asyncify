@@ -39,6 +39,56 @@ namespace Asyncify.Test
             var test = @"";
             VerifyCSharpDiagnostic(test);
         }
+        [TestMethod, TestCategory("Remove.Task.Wait()")]
+        public void Should_have_no_diagnostic_for_locked_code()
+        {
+            var testExpression = @"
+lock(this) 
+{
+    AsyncMethods.GetNumber().Wait();
+}
+";
+            var testTaskClass = TaskWrapperCode.MergeCode(testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+        }
+        [TestMethod, TestCategory("Remove.Task.Wait()")]
+        public void Should_have_no_diagnostic_for_unsafe_code()
+        {
+            var testExpression = @"
+unsafe 
+{
+    AsyncMethods.GetNumber().Wait();
+}
+";
+            var testTaskClass = TaskWrapperCode.MergeCode(testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+        }
+
+        [TestMethod, TestCategory("Remove.Task.Wait()")]
+        public void Should_have_no_diagnostic_for_unsafe_method_code()
+        {
+            var testExpression = @"AsyncMethods.GetNumber().Wait();";
+            var testMethod = @"unsafe async Task TestMethod()";
+            var testTaskClass = TaskMethodWrapperCode.MergeCode(testMethod, testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+        }
+        [TestMethod, TestCategory("Remove.Task.Wait()")]
+        public void Should_have_no_diagnostic_for_out_method_code()
+        {
+            var testExpression = @"test = null;
+AsyncMethods.GetNumber().Wait();";
+            var testMethod = @"async Task TestMethod(out AsyncMemberMethods test)";
+            var testTaskClass = TaskMethodWrapperCode.MergeCode(testMethod, testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+        }
+        [TestMethod, TestCategory("Remove.Task.Wait()")]
+        public void Should_have_no_diagnostic_for_ref_method_code()
+        {
+            var testExpression = @"AsyncMethods.GetNumber().Wait();";
+            var testMethod = @"unsafe async Task TestMethod(ref AsyncMemberMethods test)";
+            var testTaskClass = TaskMethodWrapperCode.MergeCode(testMethod, testExpression);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+        }
 
 
         [TestMethod, TestCategory("Remove.Task.Wait()")]

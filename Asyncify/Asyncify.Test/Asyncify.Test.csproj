@@ -116,6 +116,7 @@
     <Compile Include="Helpers\Code\TaskChildCode.cs" />
     <Compile Include="Helpers\Code\TaskExpressionWrapper.cs" />
     <Compile Include="Helpers\Code\TaskMemberCode.cs" />
+    <Compile Include="Helpers\Code\TaskMethodWrapper.cs" />
     <Compile Include="Helpers\Code\TaskNamespacedStaticCode.cs" />
     <Compile Include="Helpers\Code\TaskStaticCode.cs" />
     <Compile Include="Helpers\Code\WrapperCodeUnit.cs" />
