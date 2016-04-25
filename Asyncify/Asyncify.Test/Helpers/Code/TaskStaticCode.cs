@@ -29,6 +29,11 @@ namespace Asyncify.Test.Helpers.Code
         {
             return new TaskChild<Different.AsyncMemberMethods>();
         }
+
+        public static TaskChild<Different.Namespace.AsyncMemberMethods> GetReallyDifferentMemberMethods()
+        {
+            return new TaskChild<Different.Namespace.AsyncMemberMethods>();
+        }
     }
 ";
 

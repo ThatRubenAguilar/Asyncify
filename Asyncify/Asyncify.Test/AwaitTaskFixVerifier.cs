@@ -19,11 +19,9 @@ namespace Asyncify.Test
         protected static readonly ProjectUnit TaskWrapperProject = new ProjectUnit(
             new SourceCodeUnit[]
             {
-                new TaskStaticCode(), new TaskMemberCode(), new TaskChildCode(), new TaskNamespacedStaticCode(),
+                new TaskStaticCode(), new TaskMemberCode(), new TaskChildCode(), new TaskNamespacedStaticCode(), new TaskNamespacedMemberCode(), 
             });
-
-        protected static readonly TaskExpressionWrapper TaskWrapperCode = new TaskExpressionWrapper();
-        protected static readonly TaskMethodWrapper TaskMethodWrapperCode = new TaskMethodWrapper();
+        
 
         protected override CodeFixProvider GetCSharpCodeFixProvider()
         {
@@ -34,6 +32,7 @@ namespace Asyncify.Test
         {
             return new TAnalyzer();
         }
+
         
 
         protected void AwaitTaskDiagnosticAndFix(MergedCodeUnit testExpression, DiagnosticResult expected,

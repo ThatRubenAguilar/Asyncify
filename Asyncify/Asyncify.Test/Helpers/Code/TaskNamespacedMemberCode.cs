@@ -1,14 +1,12 @@
-using TestHelper;
-
 namespace Asyncify.Test.Helpers.Code
 {
-    public class TaskNamespacedStaticCode : SourceCodeUnit
+    public class TaskNamespacedMemberCode : SourceCodeUnit
     {
         public const string SourceCode = @"
     using System;
     using System.Threading.Tasks;
 
-namespace Different
+namespace Different.Namespace 
 {
     class AsyncMemberMethods
     {
@@ -45,16 +43,12 @@ namespace Different
         {
             return new TaskChild<AsyncMemberMethods>();
         }
-
-        public static TaskChild<Different.Namespace.AsyncMemberMethods> GetReallyDifferentMemberMethods()
-        {
-            return new TaskChild<Different.Namespace.AsyncMemberMethods>();
-        }
+        
     }
 }
 ";
 
-        public TaskNamespacedStaticCode() : base(SourceCode)
+        public TaskNamespacedMemberCode() : base(SourceCode)
         {
             
         }

@@ -11,22 +11,13 @@ namespace Asyncify.Test
     public class ExtractAwait_Refactoring_Tests :
         AwaitTaskRefactoringVerifier<ExtractAwaitExpressionToVariableRefactorProvider>
     {
-
-        protected ResultLocation ExpectedResultLocation(string testExpression, string refactoringTargetCode)
-        {
-            return ExpectedResultLocation(TaskWrapperCode.MergeCode(testExpression), refactoringTargetCode);
-        }
-
-        protected IEnumerable<ResultLocation> ExpectedResultLocations(string testExpression, string blockingCallCode)
-        {
-            return ExpectedResultLocations(TaskWrapperCode.MergeCode(testExpression), blockingCallCode);
-        }
+        
 
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_have_no_change_for_empty_code()
         {
             var test = @"";
-            AwaitTaskRefactoring(test, null, test);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(test, null, test);
         }
 
         #region Code Block
@@ -44,8 +35,8 @@ namespace Asyncify.Test
             var t = (taskResult).Field1;
         }
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_extract_correct_await_in_double_await_in_block_code_for_generic_task()
@@ -70,9 +61,9 @@ namespace Asyncify.Test
             var t = (await taskResult).Field1;
         }
 ";
-            var expected = ExpectedResultLocations(testExpression, "await").ToArray();
-            AwaitTaskRefactoring(testExpression, expected[0], fixOuterExpression, true);
-            AwaitTaskRefactoring(testExpression, expected[1], fixInnerExpression, true);
+            var expected = ExpectedResultLocations<TaskExpressionWrapper>("await", testExpression).ToArray();
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected[0], fixOuterExpression, true);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected[1], fixInnerExpression, true);
         }
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_extract_await_in_block_code_for_generic_task_with_type_in_different_namespace()
@@ -88,8 +79,8 @@ namespace Asyncify.Test
             var t = (taskResult).Field1;
         }
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_not_extract_await_in_block_code_when_generic_task_not_awaited()
@@ -99,7 +90,7 @@ namespace Asyncify.Test
     var t = AsyncMethods.GetMemberMethods().Result.Field1;
 }
 ";
-            AwaitTaskRefactoring(testExpression, null, testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, null, testExpression);
         }
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_not_extract_await_in_block_code_for_non_generic_task()
@@ -109,8 +100,8 @@ namespace Asyncify.Test
     await AsyncMethods.PerformProcessing();
 }
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, testExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, testExpression);
         }
 
         [TestMethod, TestCategory("Extract_Await")]
@@ -130,8 +121,8 @@ namespace Asyncify.Test
             var t = (taskResult){formattedTrivia}.Field1;
         }}
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
 
         [TestMethod, TestCategory("Extract_Await")]
@@ -148,8 +139,8 @@ namespace Asyncify.Test
             var t = (taskResult).Field1
         }
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
         #endregion Code Block
         #region Lambda Block
@@ -169,8 +160,8 @@ namespace Asyncify.Test
             return (taskResult).Field1;
         };
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_extract_await_in_lambda_block_code_for_generic_task_with_type_in_different_namespace()
@@ -188,8 +179,8 @@ namespace Asyncify.Test
             return (taskResult).Field1;
         };
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
         
         [TestMethod, TestCategory("Extract_Await")]
@@ -201,7 +192,7 @@ Func<AsyncMemberMethods> lambda = () =>
     return AsyncMethods.GetMemberMethods().Result.Field1;
 };
 ";
-            AwaitTaskRefactoring(testExpression, null, testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, null, testExpression);
         }
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_not_extract_await_in_lambda_block_code_for_non_generic_task()
@@ -212,8 +203,8 @@ Action lambda = async () =>
     await AsyncMethods.PerformProcessing();
 };
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, testExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, testExpression);
         }
 
         [TestMethod, TestCategory("Extract_Await")]
@@ -234,8 +225,8 @@ Action lambda = async () =>
             return (taskResult){formattedTrivia}.Field1;
         }};
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
 
         [TestMethod, TestCategory("Extract_Await")]
@@ -254,8 +245,8 @@ Action lambda = async () =>
             return (taskResult).Field1
         };
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_extract_await_in_lambda_block_code_for_generic_task_with_non_async_broken_syntax()
@@ -273,8 +264,8 @@ Action lambda = async () =>
             return (taskResult).Field1;
         };
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression, true);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression, true);
         }
         #endregion Lambda Block
         #region Lambda Single Line
@@ -291,8 +282,8 @@ Action lambda = async () =>
             return (taskResult).Field1;
         };
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_extract_await_in_lambda_single_line_for_generic_task_with_type_in_different_namespace()
@@ -307,8 +298,8 @@ Action lambda = async () =>
             return (taskResult).Field1;
         };
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
         
         [TestMethod, TestCategory("Extract_Await")]
@@ -317,7 +308,7 @@ Action lambda = async () =>
             var testExpression = @"
 Func<AsyncMemberMethods> lambda = () => AsyncMethods.GetMemberMethods().Result.Field1;
 ";
-            AwaitTaskRefactoring(testExpression, null, testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, null, testExpression);
         }
         [TestMethod, TestCategory("Extract_Await")]
         public void Should_not_extract_await_in_lambda_single_line_for_non_generic_task()
@@ -325,8 +316,8 @@ Func<AsyncMemberMethods> lambda = () => AsyncMethods.GetMemberMethods().Result.F
             var testExpression = @"
 Action lambda = async () => await AsyncMethods.PerformProcessing();
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, testExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, testExpression);
         }
 
         [TestMethod, TestCategory("Extract_Await")]
@@ -345,8 +336,8 @@ Action lambda = async () => await AsyncMethods.PerformProcessing();
             return (taskResult){formattedTrivia}.Field1;
         }};
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
 
         [TestMethod, TestCategory("Extract_Await")]
@@ -361,8 +352,8 @@ Action lambda = async () => await AsyncMethods.PerformProcessing();
             AsyncMemberMethods taskResult = await AsyncMethods.GetMemberMethods();
             return (taskResult).Field1;
         }";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
 
         [TestMethod, TestCategory("Extract_Await")]
@@ -378,15 +369,15 @@ Action lambda = async () => await AsyncMethods.PerformProcessing();
             return (taskResult).Field1;
         };
 ";
-            var expected = ExpectedResultLocation(testExpression, "await");
-            AwaitTaskRefactoring(testExpression, expected, fixExpression, true);
+            var expected = ExpectedResultLocation<TaskExpressionWrapper>("await", testExpression);
+            AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression, true);
         }
         #endregion Lambda Single Line
 
         /*
         TODO: see how it handles types that are not included in the namespace, use simplifier/include using, also add 2 deep namespace tests
         TODO: Pipe async definition up 1
-        TODO: CS4033 fix with async Task instead of void, split lambda and anonymous method delegates (may need to find type and change base) and method
+        TODO: CS4033 fix with async Task instead of void, split lambda and anonymous method delegates (may need to find type and change base) and method, move current refactor to analyzer/fix combo
     */
     }
 }

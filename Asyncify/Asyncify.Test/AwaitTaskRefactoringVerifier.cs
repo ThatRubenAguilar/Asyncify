@@ -16,32 +16,57 @@ namespace Asyncify.Test
         protected static readonly ProjectUnit TaskWrapperProject = new ProjectUnit(
             new SourceCodeUnit[]
             {
-                new TaskStaticCode(), new TaskMemberCode(), new TaskChildCode(), new TaskNamespacedStaticCode(),
+                new TaskStaticCode(), new TaskMemberCode(), new TaskChildCode(), new TaskNamespacedStaticCode(), new TaskNamespacedMemberCode(),
             });
-
-        protected static readonly TaskExpressionWrapper TaskWrapperCode = new TaskExpressionWrapper();
+        
 
         protected override CodeRefactoringProvider GetCSharpRefactoringProvider()
         {
             return new TRefactoring();
         }
 
-
-        protected void AwaitTaskRefactoring(string testExpression, ResultLocation expected, 
+        // TODO: Refactor fix verifier to this pattern of generic WrapperCodeUnit new() -> merged code unit function in all levels of test framework
+        protected void AwaitTaskRefactoring<TWrapper>(string testExpression, ResultLocation expected, 
             string fixedExpression, bool allowNewCompilerDiagnostics = false)
+            where TWrapper : WrapperCodeUnit, new()
         {
-            var testTaskClass = TaskWrapperCode.MergeCode( testExpression);
+            var wrapper = new TWrapper();
+            var testTaskClass = wrapper.MergeCode( testExpression);
 
-            var fixTaskClass = TaskWrapperCode.MergeCode( fixedExpression);
+            var fixTaskClass = wrapper.MergeCode( fixedExpression);
             VerifyCSharpRefactoring(testTaskClass.ToString(), expected, fixTaskClass.ToString(), TaskWrapperProject.SupportingSourcesAsString(), allowNewCompilerDiagnostics);
         }
-
-        protected ResultLocation ExpectedResultLocation(MergedCodeUnit testExpression, string refactoringTargetCode)
+        protected void AwaitTaskRefactoring<TWrapper>(string[] testExpressions, ResultLocation expected, 
+            string[] fixedExpressions, bool allowNewCompilerDiagnostics = false)
+            where TWrapper : WrapperCodeUnit, new()
         {
-            return ExpectedResultLocations(testExpression, refactoringTargetCode).Single();
+            var wrapper = new TWrapper();
+            var testTaskClass = wrapper.MergeCode( testExpressions);
+
+            var fixTaskClass = wrapper.MergeCode( fixedExpressions);
+            VerifyCSharpRefactoring(testTaskClass.ToString(), expected, fixTaskClass.ToString(), TaskWrapperProject.SupportingSourcesAsString(), allowNewCompilerDiagnostics);
+        }
+        
+        protected ResultLocation ExpectedResultLocation<TWrapper>(string refactoringTargetCode, params string[] testExpressions)
+            where TWrapper : WrapperCodeUnit, new()
+        {
+            var wrapper = new TWrapper();
+            return ExpectedResultLocation(refactoringTargetCode, wrapper.MergeCode(testExpressions));
         }
 
-        protected IEnumerable<ResultLocation> ExpectedResultLocations(MergedCodeUnit testExpression, string blockingCallCode)
+        protected IEnumerable<ResultLocation> ExpectedResultLocations<TWrapper>(string blockingCallCode, params string[] testExpressions)
+            where TWrapper : WrapperCodeUnit, new()
+        {
+            var wrapper = new TWrapper();
+            return ExpectedResultLocations(blockingCallCode, wrapper.MergeCode(testExpressions));
+        }
+
+        protected ResultLocation ExpectedResultLocation(string refactoringTargetCode, MergedCodeUnit testExpression)
+        {
+            return ExpectedResultLocations(refactoringTargetCode, testExpression).Single();
+        }
+
+        protected IEnumerable<ResultLocation> ExpectedResultLocations(string blockingCallCode, MergedCodeUnit testExpression)
         {
             var lineColOffsets = (IEnumerable<ResultLocation>)testExpression.FindAbsoluteSourceLocations(0, blockingCallCode);
             foreach (var lineColOffset in lineColOffsets)
