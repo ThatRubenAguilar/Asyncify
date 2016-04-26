@@ -33,7 +33,21 @@ namespace Asyncify.Test
             return new TAnalyzer();
         }
 
-        
+        protected void VerifyNoDiagnostic<TWrapper>(params string[] testExpressions)
+            where TWrapper : WrapperCodeUnit, new()
+        {
+            var wrapper = new TWrapper();
+            var testTaskClass = wrapper.MergeCode(testExpressions);
+            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+        }
+
+        protected void AwaitTaskDiagnosticAndFix<TWrapper>(string testExpression, DiagnosticResult expected,
+            string fixedExpression, bool allowNewCompilerDiagnostics = false)
+            where TWrapper : WrapperCodeUnit, new()
+        {
+            var wrapper = new TWrapper();
+            AwaitTaskDiagnosticAndFix(wrapper.MergeCode(testExpression), expected, wrapper.MergeCode(fixedExpression), allowNewCompilerDiagnostics);
+        }
 
         protected void AwaitTaskDiagnosticAndFix(MergedCodeUnit testExpression, DiagnosticResult expected,
             MergedCodeUnit fixedExpression, bool allowNewCompilerDiagnostics = false)
@@ -44,6 +58,15 @@ namespace Asyncify.Test
             var fixTaskClass = fixedExpression;
             VerifyCSharpFix(testTaskClass.ToString(), fixTaskClass.ToString(), TaskWrapperProject.SupportingSourcesAsString(), allowNewCompilerDiagnostics, expected);
         }
+
+        protected void AwaitTaskDiagnosticsAndFix<TWrapper>(string testExpression, DiagnosticResult[] expected,
+            string fixedExpression, bool allowNewCompilerDiagnostics = false)
+            where TWrapper : WrapperCodeUnit, new()
+        {
+            var wrapper = new TWrapper();
+            AwaitTaskDiagnosticsAndFix(wrapper.MergeCode(testExpression), expected, wrapper.MergeCode(fixedExpression), allowNewCompilerDiagnostics);
+        }
+
         protected void AwaitTaskDiagnosticsAndFix(MergedCodeUnit testExpression, DiagnosticResult[] expected,
             MergedCodeUnit fixedExpression, bool allowNewCompilerDiagnostics = false)
         {
@@ -55,10 +78,25 @@ namespace Asyncify.Test
         }
 
 
+        protected DiagnosticResult AwaitTaskExpectedResult<TWrapper>(string testExpression,
+            DiagnosticDescriptor rule, string blockingCallCode, string callerTaskExpression)
+            where TWrapper : WrapperCodeUnit, new()
+        {
+            var wrapper = new TWrapper();
+            return AwaitTaskExpectedResult(wrapper.MergeCode(testExpression), rule, blockingCallCode, callerTaskExpression);
+        }
         protected DiagnosticResult AwaitTaskExpectedResult(MergedCodeUnit testExpression,
             DiagnosticDescriptor rule, string blockingCallCode, string callerTaskExpression)
         {
             return AwaitTaskExpectedResults(testExpression, rule, blockingCallCode, callerTaskExpression).Single();
+        }
+
+        protected IEnumerable<DiagnosticResult> AwaitTaskExpectedResults<TWrapper>(string testExpression,
+            DiagnosticDescriptor rule, string blockingCallCode, params string[] callerTaskExpressions)
+            where TWrapper : WrapperCodeUnit, new()
+        {
+            var wrapper = new TWrapper();
+            return AwaitTaskExpectedResults(wrapper.MergeCode(testExpression), rule, blockingCallCode, callerTaskExpressions);
         }
 
         protected IEnumerable<DiagnosticResult> AwaitTaskExpectedResults(MergedCodeUnit testExpression, DiagnosticDescriptor rule, string blockingCallCode, params string[] callerTaskExpressions)

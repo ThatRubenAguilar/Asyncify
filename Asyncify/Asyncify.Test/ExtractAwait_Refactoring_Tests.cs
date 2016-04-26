@@ -39,6 +39,32 @@ namespace Asyncify.Test
             AwaitTaskRefactoring<TaskExpressionWrapper>(testExpression, expected, fixExpression);
         }
         [TestMethod, TestCategory("Extract_Await")]
+        public void Should_extract_await_in_block_code_for_generic_task_with_new_using()
+        {
+            var testExpressions = new[]
+            {
+                "",
+                @"
+        {
+            var t = (await AsyncMethods.GetReallyDifferentMemberMethods()).Field1;
+        }
+"
+            };
+            // TODO: Fix to add using if needed.
+            var fixExpressions = new[]
+            {
+                "using Different.Namespace",
+                @"
+        {
+            AsyncMemberMethods taskResult = await AsyncMethods.GetReallyDifferentMemberMethods();
+            var t = (taskResult).Field1;
+        }
+"
+            };
+            var expected = ExpectedResultLocation<TaskNamespaceWrapper>("await", testExpressions);
+            AwaitTaskRefactoring<TaskNamespaceWrapper>(testExpressions, expected, fixExpressions);
+        }
+        [TestMethod, TestCategory("Extract_Await")]
         public void Should_extract_correct_await_in_double_await_in_block_code_for_generic_task()
         {
             var testExpression = @"

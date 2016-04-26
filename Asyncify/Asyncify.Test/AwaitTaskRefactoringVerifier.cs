@@ -24,8 +24,7 @@ namespace Asyncify.Test
         {
             return new TRefactoring();
         }
-
-        // TODO: Refactor fix verifier to this pattern of generic WrapperCodeUnit new() -> merged code unit function in all levels of test framework
+        
         protected void AwaitTaskRefactoring<TWrapper>(string testExpression, ResultLocation expected, 
             string fixedExpression, bool allowNewCompilerDiagnostics = false)
             where TWrapper : WrapperCodeUnit, new()
@@ -36,6 +35,7 @@ namespace Asyncify.Test
             var fixTaskClass = wrapper.MergeCode( fixedExpression);
             VerifyCSharpRefactoring(testTaskClass.ToString(), expected, fixTaskClass.ToString(), TaskWrapperProject.SupportingSourcesAsString(), allowNewCompilerDiagnostics);
         }
+
         protected void AwaitTaskRefactoring<TWrapper>(string[] testExpressions, ResultLocation expected, 
             string[] fixedExpressions, bool allowNewCompilerDiagnostics = false)
             where TWrapper : WrapperCodeUnit, new()
@@ -68,7 +68,7 @@ namespace Asyncify.Test
 
         protected IEnumerable<ResultLocation> ExpectedResultLocations(string blockingCallCode, MergedCodeUnit testExpression)
         {
-            var lineColOffsets = (IEnumerable<ResultLocation>)testExpression.FindAbsoluteSourceLocations(0, blockingCallCode);
+            var lineColOffsets = (IEnumerable<ResultLocation>)testExpression.FindSourceLocations( blockingCallCode);
             foreach (var lineColOffset in lineColOffsets)
             {
                 yield return lineColOffset;

@@ -15,22 +15,22 @@ namespace Asyncify.Test
     {
         private DiagnosticResult RemoveTaskWaitMethodExpectedResult(string testExpression, string callerTaskExpression)
         {
-            return AwaitTaskExpectedResult(TaskWrapperCode.MergeCode(testExpression), AsyncifyRules.RemoveGenericTaskWaitRule, "Wait()", callerTaskExpression);
+            return AwaitTaskExpectedResult<TaskExpressionWrapper>(testExpression, AsyncifyRules.RemoveGenericTaskWaitRule, "Wait()", callerTaskExpression);
         }
         private IEnumerable<DiagnosticResult> RemoveTaskWaitMethodExpectedResults(string testExpression, params string[] callerTaskExpressions)
         {
-            return AwaitTaskExpectedResults(TaskWrapperCode.MergeCode(testExpression), AsyncifyRules.RemoveGenericTaskWaitRule, "Wait()", callerTaskExpressions);
+            return AwaitTaskExpectedResults<TaskExpressionWrapper>(testExpression, AsyncifyRules.RemoveGenericTaskWaitRule, "Wait()", callerTaskExpressions);
         }
 
 
         private void AwaitTaskDiagnosticAndFix(string testExpression, DiagnosticResult expected, string fixExpression, bool allowNewCompilerDiagnostics = false)
         {
-            AwaitTaskDiagnosticAndFix(TaskWrapperCode.MergeCode(testExpression), expected, TaskWrapperCode.MergeCode(fixExpression), allowNewCompilerDiagnostics);
+            AwaitTaskDiagnosticAndFix<TaskExpressionWrapper>(testExpression, expected, fixExpression, allowNewCompilerDiagnostics);
         }
 
         private void AwaitTaskDiagnosticsAndFix(string testExpression, DiagnosticResult[] expected, string fixExpression, bool allowNewCompilerDiagnostics = false)
         {
-            AwaitTaskDiagnosticsAndFix(TaskWrapperCode.MergeCode(testExpression), expected, TaskWrapperCode.MergeCode(fixExpression), allowNewCompilerDiagnostics);
+            AwaitTaskDiagnosticsAndFix<TaskExpressionWrapper>(testExpression, expected, fixExpression, allowNewCompilerDiagnostics);
         }
 
         [TestMethod, TestCategory("Remove.Task.Wait()")]
@@ -48,8 +48,7 @@ lock(this)
     AsyncMethods.GetNumber().Wait();
 }
 ";
-            var testTaskClass = TaskWrapperCode.MergeCode(testExpression);
-            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+            VerifyNoDiagnostic<TaskExpressionWrapper>(testExpression);
         }
         [TestMethod, TestCategory("Remove.Task.Wait()")]
         public void Should_have_no_diagnostic_for_unsafe_code()
@@ -60,8 +59,7 @@ unsafe
     AsyncMethods.GetNumber().Wait();
 }
 ";
-            var testTaskClass = TaskWrapperCode.MergeCode(testExpression);
-            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+            VerifyNoDiagnostic<TaskExpressionWrapper>(testExpression);
         }
 
         [TestMethod, TestCategory("Remove.Task.Wait()")]
@@ -69,8 +67,7 @@ unsafe
         {
             var testExpression = @"AsyncMethods.GetNumber().Wait();";
             var testMethod = @"unsafe async Task TestMethod()";
-            var testTaskClass = TaskMethodWrapperCode.MergeCode(testMethod, testExpression);
-            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+            VerifyNoDiagnostic<TaskMethodWrapper>(testMethod, testExpression);
         }
         [TestMethod, TestCategory("Remove.Task.Wait()")]
         public void Should_have_no_diagnostic_for_out_method_code()
@@ -78,16 +75,14 @@ unsafe
             var testExpression = @"test = null;
 AsyncMethods.GetNumber().Wait();";
             var testMethod = @"async Task TestMethod(out AsyncMemberMethods test)";
-            var testTaskClass = TaskMethodWrapperCode.MergeCode(testMethod, testExpression);
-            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+            VerifyNoDiagnostic<TaskMethodWrapper>(testMethod, testExpression);
         }
         [TestMethod, TestCategory("Remove.Task.Wait()")]
         public void Should_have_no_diagnostic_for_ref_method_code()
         {
             var testExpression = @"AsyncMethods.GetNumber().Wait();";
             var testMethod = @"unsafe async Task TestMethod(ref AsyncMemberMethods test)";
-            var testTaskClass = TaskMethodWrapperCode.MergeCode(testMethod, testExpression);
-            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+            VerifyNoDiagnostic<TaskMethodWrapper>(testMethod, testExpression);
         }
 
 
@@ -107,8 +102,7 @@ AsyncMethods.GetNumber().Wait();";
         {
             var testExpression = @"(new AsyncMemberMethods()).Wait();";
 
-            var testTaskClass = TaskWrapperCode.MergeCode( testExpression);
-            VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass));
+            VerifyNoDiagnostic<TaskExpressionWrapper>(testExpression);
         }
 
         [TestMethod, TestCategory("Remove.Task.Wait()")]
@@ -116,9 +110,9 @@ AsyncMethods.GetNumber().Wait();";
         {
             var testExpression = @"AsyncMethods.PerformProcessing().Wait();";
 
-            var testTaskClass = TaskWrapperCode.MergeCode( testExpression);
+            var testTaskClass = new TaskExpressionWrapper().MergeCode( testExpression);
 
-            var expected = AwaitTaskExpectedResult(testTaskClass, AsyncifyRules.AwaitTaskWaitRule, "Wait()", "AsyncMethods.PerformProcessing()");
+            var expected = AwaitTaskExpectedResult<TaskExpressionWrapper>(testExpression, AsyncifyRules.AwaitTaskWaitRule, "Wait()", "AsyncMethods.PerformProcessing()");
 
             VerifyCSharpDiagnostic(TaskWrapperProject.TestCodeCompilationUnit(testTaskClass), expected);
         }
